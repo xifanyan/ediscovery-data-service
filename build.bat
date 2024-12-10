@@ -1,0 +1,1 @@
+go build -ldflags="-s -w" -o bin/ediscovery-data-service.exe main.go

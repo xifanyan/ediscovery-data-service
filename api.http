@@ -1,0 +1,57 @@
+### getApplications
+GET http://localhost:8080/getApplications
+
+### getRnaApplications
+GET http://localhost:8080/getRnaApplications
+
+### getEngines
+GET http://localhost:8080/getEngines?application=documentHold.demo00001
+
+### getDataSourceTemplate
+GET http://localhost:8080/getDataSourceTemplate?template=_DS_FTP_Template
+
+### getCustodians
+GET http://localhost:8080/getCustodians?application=documentHold.demo00001
+
+### submitFtpIngestionData
+POST http://localhost:8080/submitFtpIngestionData?application=documentHold.demo00001&engine=singleMindServer.demo00001&dataSource=ftp_demo_01&dataSourceTemplate=_DS_FTP_Template&custodian=democust&ftpPath=dstest
+
+### submitTagger
+POST http://localhost:8080/submitTagger?application=axcelerate.RH_ECA4_RH_Matter1&id=tagdemo1&globalSearch=all_plain_text_files&termTaxonomy=meta_bcc&typeTaxonomy=meta_cc
+
+### importUsersAndGroups
+POST http://localhost:8080/importUsersAndGroups
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+usersAndGroups
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="usersAndGroups"; filename="usersAndGroups.xlsx"
+Content-Type: application/octet-stream
+
+< c:\Users\pyan\Downloads\usersAndGroups.xlsx
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### getGlobalSavedSearches
+GET http://localhost:8080/getGlobalSearches
+
+### getFieldProperties
+GET http://localhost:8080/getFieldProperties?application=axcelerate.RH_ECA4_RH_Matter1
+
+### importGlobalSearchesAndTaggers
+POST http://localhost:8080/importGlobalSearchesAndTaggers
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+globalSearchesAndTaggers
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="globalSearchesAndTaggers"; filename="globalSearchesAndTaggers.xlsx"
+Content-Type: application/octet-stream
+
+< c:\Users\pyan\Downloads\globalSearchesAndTaggers.xlsx
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### getRedactionReasons
+GET http://localhost:8080/getRedactionReasons?application=axcelerate.RH_ECA4_RH_Matter1
+
+
+### addRedactionReasons
+POST http://localhost:8080/addRedactionReason?application=axcelerate.RH_ECA4_RH_Matter1&redactionReason=FORTEST

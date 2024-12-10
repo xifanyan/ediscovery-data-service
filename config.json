@@ -1,0 +1,17 @@
+{
+    "echo": {
+      "port": 8080
+    },
+    "adp": {
+      "domain": "vm-rhauswirth2.otxlab.net",
+      "port": 8443,
+      "user": "adpuser",
+      "password": "adpus3r"
+    },
+    "searchWebAPI": {
+      "domain": "vm-rhauswirth2.otxlab.net",
+      "port": 8443,
+      "endpoint": "searchWebApi"
+    }
+}
+  

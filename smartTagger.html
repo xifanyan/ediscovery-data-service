@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock-Up Web Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input {
+            width: 95%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Add Smart Tagger</h1>
+    <form>
+        <label for="tagger">Tagger ID:</label>
+        <input id="tagger"></input>
+        <label for="application">Application:</label>
+        <select id="application">
+            <option value="app1">Application ID 1</option>
+            <option value="app2">Application ID 2</option>
+            <option value="app3">Application ID 3</option>
+            <option value="app4">Application ID 4</option>
+        </select>
+
+        <label for="globalSearch">Global Search:</label>
+        <select id="globalSearch">
+            <option value="search1">Global Search ID 1</option>
+            <option value="search2">Global Search ID 2</option>
+            <option value="search3">Global Search ID 3</option>
+            <option value="search4">Global Search ID 4</option>
+        </select>
+
+        <label for="termTaxonomy">Term Taxonomy:</label>
+        <select id="termTaxonomy">
+            <option value="tax1">ID</option>
+            <option value="tax2">URI</option>
+            <option value="tax3">Custodian</option>
+            <option value="tax4">Mail To</option>
+        </select>
+
+        <label for="typeTaxonomy">Type Taxonomy:</label>
+        <select id="typeTaxonomy">
+            <option value="tax1">ID</option>
+            <option value="tax2">URI</option>
+            <option value="tax3">Custodian</option>
+            <option value="tax4">Mail To</option>
+        </select>
+
+        <button type="submit">Add Smart Tagger</button>
+    </form>
+
+</body>
+</html>
+
+
