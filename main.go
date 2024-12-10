@@ -8,9 +8,9 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
 
-	"ediscovery-data-service/config"
-	"ediscovery-data-service/handler"
-	"ediscovery-data-service/service"
+	"github.com/xifanyan/ediscovery-data-service/config"
+	"github.com/xifanyan/ediscovery-data-service/handler"
+	"github.com/xifanyan/ediscovery-data-service/service"
 )
 
 var (

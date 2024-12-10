@@ -1,8 +1,8 @@
 package service
 
 import (
-	"ediscovery-data-service/client"
-	"ediscovery-data-service/config"
+	"github.com/xifanyan/ediscovery-data-service/client"
+	"github.com/xifanyan/ediscovery-data-service/config"
 
 	adp "github.com/xifanyan/adp"
 	// searchwebapi "github.com/xifanyan/kiota-searchwebapi"

@@ -1,4 +1,4 @@
-module https://github.com/xifanyan/ediscovery-data-service
+module github.com/xifanyan/ediscovery-data-service
 
 go 1.22.4
 

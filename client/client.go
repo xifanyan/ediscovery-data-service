@@ -1,7 +1,7 @@
 package client
 
 import (
-	"ediscovery-data-service/config"
+	"github.com/xifanyan/ediscovery-data-service/config"
 
 	"github.com/xifanyan/adp"
 )

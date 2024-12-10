@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"ediscovery-data-service/auth"
-	"ediscovery-data-service/service"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +8,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/xifanyan/ediscovery-data-service/auth"
+	"github.com/xifanyan/ediscovery-data-service/service"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
