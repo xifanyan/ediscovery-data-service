@@ -27,12 +27,12 @@ func NewHandler(service *service.Service) *Handler {
 }
 
 func (h *Handler) SetupRouter(e *echo.Echo) {
-	// e.Use(auth.JWTMiddleware)
 
 	e.GET("/getApplications", h.getDocumentHolds)
 	e.GET("/getRnaApplications", h.getAxcelerates)
 	e.GET("/getEngines", h.getEngines)
-	e.GET("/getDataSourceTemplate", h.getDataSourceTemplate)
+	// e.GET("/getDataSourceTemplate", h.getDataSourceTemplate)
+	e.GET("/getDataSourceTemplates", h.getDataSourceTemplates)
 	e.GET("/getCustodians", h.getCustodians)
 	e.GET("/getGlobalSearches", h.getGlobalSearches)
 	e.GET("/getFieldProperties", h.getFieldProperties)
@@ -242,18 +242,25 @@ func (h *Handler) getCustodians(c echo.Context) error {
 // This endpoint first checks if the given template name starts with "dataSource.".
 // If not, it prefixes the name with "dataSource." and then queries the ADP server for the given template.
 // The result is then returned as JSON.
-func (h *Handler) getDataSourceTemplate(c echo.Context) error {
-	template := c.QueryParam("template")
-	if !strings.HasPrefix(template, "dataSource.") {
-		template = fmt.Sprintf("dataSource.%s", template)
-	}
-
-	res, err := h.service.ADPsvc.GetEntityByID(template)
+func (h *Handler) getDataSourceTemplates(c echo.Context) error {
+	userName := c.Get("user").(string)
+	res, err := h.service.ADPsvc.ListDatasourcesByUser(userName)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	return c.JSON(http.StatusOK, res)
+	var templates []adp.Entity
+	for _, ds := range res {
+		if strings.Contains(strings.ToLower(ds.DisplayName), "template") {
+			templates = append(templates, ds)
+		}
+	}
+
+	if len(templates) == 0 {
+		return c.JSON(http.StatusBadRequest, "no templates found")
+	}
+
+	return c.JSON(http.StatusOK, templates)
 }
 
 func saveToTempFile(r *multipart.FileHeader) (string, error) {
