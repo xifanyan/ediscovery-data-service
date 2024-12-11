@@ -1,11 +1,14 @@
 ### getApplications
 GET http://localhost:8080/getApplications
+USER: pyan:CaseManager
 
 ### getRnaApplications
 GET http://localhost:8080/getRnaApplications
+USER: pyan:CaseManager
 
 ### getEngines
 GET http://localhost:8080/getEngines?application=documentHold.demo00001
+USER: pyan:CaseManager
 
 ### getDataSourceTemplate
 GET http://localhost:8080/getDataSourceTemplate?template=_DS_FTP_Template

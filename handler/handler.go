@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/xifanyan/ediscovery-data-service/auth"
 	"github.com/xifanyan/ediscovery-data-service/service"
 
 	"github.com/labstack/echo/v4"
@@ -28,7 +27,7 @@ func NewHandler(service *service.Service) *Handler {
 }
 
 func (h *Handler) SetupRouter(e *echo.Echo) {
-	e.Use(auth.JWTMiddleware)
+	// e.Use(auth.JWTMiddleware)
 
 	e.GET("/getApplications", h.getDocumentHolds)
 	e.GET("/getRnaApplications", h.getAxcelerates)

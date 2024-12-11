@@ -1,84 +1,88 @@
 package auth
 
 import (
+	"fmt"
+	"net/http"
 	"strings"
-	"time"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 )
 
-type JWTClaim struct {
-	Username string `json:"username"`
-	jwt.StandardClaims
+type UserInfo struct {
+	Name  string
+	Roles map[string]struct{}
 }
 
-var (
-	jwtSecret = []byte("secret-key")
-)
-
-func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+func UserAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		// expecting the user header to be in the format "username:role1,role2,role3"
+		userHeader := c.Request().Header.Get("USER")
+		log.Debug().Msgf("User Info: %s", userHeader)
 
-		token := extractToken(c)
-		if token == "" {
-			token, _ = createToken("pyan", time.Hour*1, jwtSecret)
-			// return echo.ErrUnauthorized
+		// Trim whitespace and check if header is empty
+		userHeader = strings.TrimSpace(userHeader)
+		if userHeader == "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "USER header is required")
 		}
 
-		claims, err := validateToken(token, jwtSecret)
+		userInfo, err := parseUserHeader(userHeader)
 		if err != nil {
-			log.Error().Msg(err.Error())
-			return echo.ErrUnauthorized
+			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
-		if claims.Username == "" {
-			log.Error().Msg("failed to pull user name")
-			return echo.ErrUnauthorized
+		if _, ok := userInfo.Roles["CaseManager"]; !ok {
+			msg := fmt.Sprintf("User %s does not have CaseManager role", userInfo.Name)
+			return echo.NewHTTPError(http.StatusForbidden, msg)
 		}
 
-		c.Set("user", claims.Username)
-		// c.Set("token", token)
-		// c.Request().Header.Set("Authorization", "Bearer "+token)
-
-		// Set claims in context
-		// c.Set("claims", claims)
+		// Set the parsed username in the context for potential use in subsequent handlers
+		c.Set("user", userInfo.Name)
 		return next(c)
 	}
 }
 
-func createToken(username string, expirationTime time.Duration, secret []byte) (string, error) {
-	claims := &JWTClaim{
-		Username: username,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(expirationTime).Unix(),
-		},
+func parseUserHeader(header string) (UserInfo, error) {
+	var userInfo UserInfo = UserInfo{}
+
+	header = strings.TrimSpace(header)
+
+	parts := strings.SplitN(header, ":", 2)
+	if len(parts) != 2 {
+		return userInfo, fmt.Errorf("header must be in the format 'username:role1,role2,...'")
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(secret)
+	username := strings.TrimSpace(parts[0])
+	if username == "" {
+		return userInfo, fmt.Errorf("username cannot be empty")
+	}
+
+	roles := strings.Split(parts[1], ",")
+	roles = filterEmptyStrings(roles)
+	if len(roles) == 0 {
+		return userInfo, fmt.Errorf("at least one role is required")
+	}
+
+	return UserInfo{
+		Name:  username,
+		Roles: roleSliceToMap(roles),
+	}, nil
 }
 
-func extractToken(c echo.Context) string {
-	bearerToken := c.Request().Header.Get("Authorization")
-	strArr := strings.Split(bearerToken, " ")
-	if len(strArr) == 2 {
-		return strArr[1]
+func filterEmptyStrings(strs []string) []string {
+	var res []string
+	for _, s := range strs {
+		if s != "" {
+			res = append(res, s)
+		}
 	}
-	return ""
+	return res
 }
 
-func validateToken(token string, secret []byte) (*JWTClaim, error) {
-	claims := &JWTClaim{}
-	tkn, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		return secret, nil
-	})
-	if err != nil {
-		return nil, err
+func roleSliceToMap(roles []string) map[string]struct{} {
+	rolesMap := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		rolesMap[role] = struct{}{}
 	}
-	if !tkn.Valid {
-		return nil, jwt.ErrSignatureInvalid
-	}
-	return claims, nil
+	return rolesMap
 }

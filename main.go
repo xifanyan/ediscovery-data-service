@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
 
+	"github.com/xifanyan/ediscovery-data-service/auth"
 	"github.com/xifanyan/ediscovery-data-service/config"
 	"github.com/xifanyan/ediscovery-data-service/handler"
 	"github.com/xifanyan/ediscovery-data-service/service"
@@ -33,6 +34,7 @@ func setupMiddleware(e *echo.Echo) {
 			},
 		},
 	))
+	e.Use(auth.UserAuthMiddleware)
 }
 
 func main() {
