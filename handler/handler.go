@@ -31,7 +31,6 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.GET("/getApplications", h.getDocumentHolds)
 	e.GET("/getRnaApplications", h.getAxcelerates)
 	e.GET("/getEngines", h.getEngines)
-	// e.GET("/getDataSourceTemplate", h.getDataSourceTemplate)
 	e.GET("/getDataSourceTemplates", h.getDataSourceTemplates)
 	e.GET("/getCustodians", h.getCustodians)
 	e.GET("/getGlobalSearches", h.getGlobalSearches)
