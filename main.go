@@ -18,7 +18,7 @@ var (
 	configFile = flag.String("config", "config.json", "config file")
 )
 
-func setupMiddleware(e *echo.Echo) {
+func setupMiddleware(e *echo.Echo, cfg config.Config) {
 	logger := zerolog.New(os.Stdout)
 	e.Use(middleware.RequestLoggerWithConfig(
 		middleware.RequestLoggerConfig{
@@ -34,7 +34,7 @@ func setupMiddleware(e *echo.Echo) {
 			},
 		},
 	))
-	e.Use(auth.UserAuthMiddleware)
+	e.Use(auth.UserAuthMiddleware(cfg))
 }
 
 func main() {
@@ -60,7 +60,7 @@ func main() {
 	e := echo.New()
 
 	// Set up middleware for the Echo instance
-	setupMiddleware(e)
+	setupMiddleware(e, cfg)
 
 	// Set up the routes for the Echo instance using the handler object
 	h.SetupRouter(e)

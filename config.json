@@ -12,6 +12,10 @@
       "domain": "vm-rhauswirth2.otxlab.net",
       "port": 8443,
       "endpoint": "searchWebApi"
+    },
+    "roles": {
+      "CaseManager": "__casemanager__",
+      "Ftp": "__ftp__"
     }
 }
   

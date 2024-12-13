@@ -21,12 +21,10 @@ type Config struct {
 	Echo struct {
 		Port int `json:"port"`
 	} `json:"echo"`
+	Roles map[string]string `json:"roles"`
 }
 
 func LoadConfig(name string) (Config, error) {
-	// exePath, _ := os.Executable()
-	// path := filepath.Join(filepath.Dir(exePath), name)
-
 	f, err := os.Open(name)
 	if err != nil {
 		return Config{}, fmt.Errorf("failed to open config file: %v", err)
@@ -39,7 +37,17 @@ func LoadConfig(name string) (Config, error) {
 		return Config{}, fmt.Errorf("failed to parse config file: %v", err)
 	}
 
+	cfg.Roles = reverseRolesMap(cfg.Roles)
+
 	return cfg, nil
+}
+
+func reverseRolesMap(m map[string]string) map[string]string {
+	reversed := make(map[string]string, len(m))
+	for k, v := range m {
+		reversed[v] = k
+	}
+	return reversed
 }
 
 func (cfg Config) EchoAddress() string {

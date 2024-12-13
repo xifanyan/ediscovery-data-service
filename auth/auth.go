@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
+	"github.com/xifanyan/ediscovery-data-service/config"
 )
 
 type UserInfo struct {
@@ -14,32 +15,43 @@ type UserInfo struct {
 	Roles map[string]struct{}
 }
 
-func UserAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		// expecting the user header to be in the format "username:role1,role2,role3"
-		userHeader := c.Request().Header.Get("USER")
-		log.Debug().Msgf("User Info: %s", userHeader)
+func UserAuthMiddleware(cfg config.Config) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			// expecting the user header to be in the format "username:role1,role2,role3"
+			userHeader := c.Request().Header.Get("USER")
+			log.Debug().Msgf("User Info: %s", userHeader)
 
-		// Trim whitespace and check if header is empty
-		userHeader = strings.TrimSpace(userHeader)
-		if userHeader == "" {
-			return echo.NewHTTPError(http.StatusBadRequest, "USER header is required")
+			// Trim whitespace and check if header is empty
+			userHeader = strings.TrimSpace(userHeader)
+			if userHeader == "" {
+				return echo.NewHTTPError(http.StatusBadRequest, "USER header is required")
+			}
+
+			userInfo, err := parseUserHeader(userHeader)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, err)
+			}
+
+			if !isCaseManager(cfg, userInfo) {
+				msg := fmt.Sprintf("User %s does not have CaseManager role", userInfo.Name)
+				return echo.NewHTTPError(http.StatusForbidden, msg)
+			}
+
+			// Set the parsed username in the context for potential use in subsequent handlers
+			c.Set("user", userInfo.Name)
+			return next(c)
 		}
-
-		userInfo, err := parseUserHeader(userHeader)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-		}
-
-		if _, ok := userInfo.Roles["CaseManager"]; !ok {
-			msg := fmt.Sprintf("User %s does not have CaseManager role", userInfo.Name)
-			return echo.NewHTTPError(http.StatusForbidden, msg)
-		}
-
-		// Set the parsed username in the context for potential use in subsequent handlers
-		c.Set("user", userInfo.Name)
-		return next(c)
 	}
+}
+
+func isCaseManager(cfg config.Config, userInfo UserInfo) bool {
+	for role := range userInfo.Roles {
+		if cfg.Roles[role] == "CaseManager" {
+			return true
+		}
+	}
+	return false
 }
 
 func parseUserHeader(header string) (UserInfo, error) {
