@@ -6,7 +6,7 @@
       "domain": "vm-rhauswirth2.otxlab.net",
       "port": 8443,
       "user": "adpuser",
-      "password": "adpus3r"
+      "password": "*******"
     },
     "searchWebAPI": {
       "domain": "vm-rhauswirth2.otxlab.net",
@@ -18,4 +18,3 @@
       "Ftp": "__ftp__"
     }
 }
-  
