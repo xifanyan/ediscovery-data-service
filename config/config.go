@@ -21,6 +21,11 @@ type Config struct {
 	Echo struct {
 		Port int `json:"port"`
 	} `json:"echo"`
+	Log struct {
+		Level   string `json:"level"`
+		Path    string `json:"path"`
+		Console bool   `json:"console"`
+	}
 	Roles map[string]string `json:"roles"`
 }
 

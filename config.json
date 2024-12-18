@@ -6,7 +6,7 @@
       "domain": "vm-rhauswirth2.otxlab.net",
       "port": 8443,
       "user": "adpuser",
-      "password": "*******"
+      "password": "adpus3r"
     },
     "searchWebAPI": {
       "domain": "vm-rhauswirth2.otxlab.net",
@@ -16,5 +16,10 @@
     "roles": {
       "CaseManager": "__casemanager__",
       "Ftp": "__ftp__"
+    },
+    "log": {
+      "level": "info",
+      "path": "logs/service.log",
+      "console": false 
     }
 }
