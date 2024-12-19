@@ -19,7 +19,7 @@
     },
     "log": {
       "level": "info",
-      "path": "logs/service.log",
-      "console": false 
+      "path": "logs/ediscovery_service.log",
+      "console": true
     }
 }

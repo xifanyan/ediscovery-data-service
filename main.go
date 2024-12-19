@@ -23,6 +23,23 @@ var (
 	configFile = flag.String("config", "config.json", "config file")
 )
 
+// setupLogWriter sets up the log writer with the provided configuration.
+//
+// This function first ensures the directory containing the log file exists
+// and then opens the log file in append mode. If the log file cannot be
+// opened, it returns an error.
+//
+// If the configuration specifies that logs should also be written to the
+// console, it returns an io.MultiWriter that writes to both the log file
+// and the console.
+//
+// Parameters:
+//   cfg (config.Config) - The configuration containing log settings.
+//
+// Returns:
+//   io.Writer - The writer to use for logging.
+//   error - An error if the log file cannot be opened.
+
 func setupLogWriter(cfg config.Config) (io.Writer, error) {
 
 	if err := os.MkdirAll(filepath.Dir(cfg.Log.Path), os.ModePerm); err != nil {
@@ -40,8 +57,17 @@ func setupLogWriter(cfg config.Config) (io.Writer, error) {
 	return logFile, nil
 }
 
+// setupGlobalLogger sets up the global logger with the provided configuration.
+//
+// This function configures the zerolog global settings, sets up the log writer,
+// and applies the log level from the configuration.
+//
+// Parameters:
+//
+//	cfg (config.Config) - The configuration containing log settings.
+//
+// Returns:
 func setupGlobalLogger(cfg config.Config) {
-	// Configure global settings
 	zerolog.TimeFieldFormat = time.RFC3339
 
 	w, err := setupLogWriter(cfg)
@@ -61,6 +87,17 @@ func setupGlobalLogger(cfg config.Config) {
 	log.Logger = zerolog.New(w).With().Timestamp().Logger()
 }
 
+// setupMiddleware configures middleware for the Echo instance.
+//
+// This function adds middleware for user authentication and request logging.
+// The user authentication middleware ensures that requests are authenticated
+// based on the provided configuration. The request logging middleware logs
+// the URI and status of each request using the zerolog logger.
+//
+// Parameters:
+//   e (echo.Echo) - The Echo instance to configure middleware for.
+//   cfg (config.Config) - The configuration containing settings for authentication.
+
 func setupMiddleware(e *echo.Echo, cfg config.Config) {
 	e.Use(auth.UserAuthMiddleware(cfg))
 
@@ -79,10 +116,6 @@ func setupMiddleware(e *echo.Echo, cfg config.Config) {
 }
 
 func main() {
-	// Set the global logging level to Info
-	// zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	// zerolog.SetGlobalLevel(zerolog.TraceLevel)
-
 	// Load the configuration from the specified file
 	var cfg config.Config
 	var err error

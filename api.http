@@ -67,3 +67,7 @@ USER: pyan:__casemanager__
 ### addRedactionReasons
 POST http://localhost:8080/addRedactionReason?application=axcelerate.RH_ECA4_RH_Matter1&redactionReason=FORTEST
 USER: pyan:__casemanager__
+
+### addCustodian
+POST http://localhost:8080/addCustodian?application=documentHold.demo00001&custodian=cust10
+USER: pyan:__casemanager__

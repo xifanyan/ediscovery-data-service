@@ -44,6 +44,7 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.POST("/importGlobalSearchesAndTaggers", h.importGlobalSearchesAndTaggers)
 
 	e.POST("/addRedactionReason", h.addRedactionReason)
+	e.POST("/addCustodian", h.addCustodian)
 }
 
 type SubmitQueryParams struct {
@@ -499,6 +500,25 @@ func (h *Handler) addRedactionReason(c echo.Context) error {
 	}
 
 	res, err := h.service.ADPsvc.CreateOrUpdateCategory(app, "Redaction Reason", redactionReason, redactionReason)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) addCustodian(c echo.Context) error {
+	app := c.QueryParam("application")
+	if app == "" {
+		return c.JSON(http.StatusBadRequest, "application is required")
+	}
+
+	custodian := c.QueryParam("custodian")
+	if custodian == "" {
+		return c.JSON(http.StatusBadRequest, "custodian is required")
+	}
+
+	res, err := h.service.ADPsvc.CreateOrUpdateCategory(app, "Custodian", custodian, custodian)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
