@@ -18,7 +18,7 @@
       "Ftp": "__ftp__"
     },
     "log": {
-      "level": "info",
+      "level": "trace",
       "path": "logs/ediscovery_service.log",
       "console": true
     }

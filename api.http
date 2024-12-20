@@ -47,6 +47,10 @@ USER: pyan:__casemanager__
 GET http://localhost:8080/getFieldProperties?application=axcelerate.RH_ECA4_RH_Matter1
 USER: pyan:__casemanager__
 
+### getTaxonomies
+GET http://localhost:8080/getTaxonomies?application=axcelerate.RH_ECA4_RH_Matter1
+USER: pyan:__casemanager__
+
 ### importGlobalSearchesAndTaggers
 POST http://localhost:8080/importGlobalSearchesAndTaggers
 USER: pyan:__casemanager__

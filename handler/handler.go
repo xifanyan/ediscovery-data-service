@@ -35,6 +35,7 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.GET("/getCustodians", h.getCustodians)
 	e.GET("/getGlobalSearches", h.getGlobalSearches)
 	e.GET("/getFieldProperties", h.getFieldProperties)
+	e.GET("/getTaxonomies", h.getTaxonomies)
 	e.GET("/getRedactionReasons", h.getRedactionReasons)
 
 	e.POST("/submitFtpIngestionData", h.submiteFtpIngestionData)
@@ -389,6 +390,35 @@ func (h *Handler) getGlobalSearches(c echo.Context) error {
 		globalSearchIDs = append(globalSearchIDs, gs.ID)
 	}
 	return c.JSON(http.StatusOK, globalSearchIDs)
+}
+
+func (h *Handler) getTaxonomies(c echo.Context) error {
+	app := c.QueryParam("application")
+	if app == "" {
+		return c.JSON(http.StatusBadRequest, "application is required")
+	}
+
+	log.Debug().Msgf("application: %s", app)
+	entities, err := h.service.ADPsvc.ListEntitiesByRelatedEntity("dataModel", app)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	dataModel := entities[0].ID
+	log.Debug().Msgf("get dataModel: %s", dataModel)
+
+	props, err := h.service.ADPsvc.GetIndexConfigurationTable(dataModel)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	taxonomies := []string{}
+	for key, prop := range props {
+		if prop.StructuredView {
+			taxonomies = append(taxonomies, key)
+		}
+	}
+	return c.JSON(http.StatusOK, taxonomies)
 }
 
 func (h *Handler) getFieldProperties(c echo.Context) error {
