@@ -16,6 +16,18 @@
     .\build.bat
     ```
 
+- Run (make sure config.json is in the same directory)
+
+    ```Command Prompt
+    .\bin\ediscovery-data-service.exe
+    ```
+
+    or
+
+    ```Command Prompt
+    go run main.go
+    ```
+
 - Install service as Windows Service with Administrator Privilege using NSSM [https://nssm.cc]
 
     ```Command Prompt (Administrator Privilege)
