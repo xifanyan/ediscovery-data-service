@@ -6,7 +6,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/rs/zerolog v1.33.0
-	github.com/xifanyan/adp v0.0.0-20241220175023-912df78da4d1
+	github.com/xifanyan/adp v0.0.0-20241223221929-db1a72b97c53
 	github.com/xuri/excelize/v2 v2.8.1
 )
 

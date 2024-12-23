@@ -28,6 +28,8 @@ func NewHandler(service *service.Service) *Handler {
 
 func (h *Handler) SetupRouter(e *echo.Echo) {
 
+	e.GET("/getWorkspaces", h.getWorkspaces)
+	e.GET("/getHosts", h.getHosts)
 	e.GET("/getApplications", h.getDocumentHolds)
 	e.GET("/getRnaApplications", h.getAxcelerates)
 	e.GET("/getEngines", h.getEngines)
@@ -549,6 +551,24 @@ func (h *Handler) addCustodian(c echo.Context) error {
 	}
 
 	res, err := h.service.ADPsvc.CreateOrUpdateCategory(app, "Custodian", custodian, custodian)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) getWorkspaces(c echo.Context) error {
+	res, err := h.service.ADPsvc.ListWorkspaces()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) getHosts(c echo.Context) error {
+	res, err := h.service.ADPsvc.ListHosts()
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}

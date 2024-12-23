@@ -75,3 +75,11 @@ USER: pyan:__casemanager__
 ### addCustodian
 POST http://localhost:8080/addCustodian?application=documentHold.demo00001&custodian=cust10
 USER: pyan:__casemanager__
+
+### getWorkspaces
+GET http://localhost:8080/getWorkspaces
+USER: pyan:__casemanager__
+
+### getHosts
+GET http://localhost:8080/getHosts
+USER: pyan:__casemanager__
