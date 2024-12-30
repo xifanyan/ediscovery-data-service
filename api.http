@@ -83,3 +83,7 @@ USER: pyan:__casemanager__
 ### getHosts
 GET http://localhost:8080/getHosts
 USER: pyan:__casemanager__
+
+### createApplication
+POST http://localhost:8080/createApplication?applicationName=NewApp2&template=documentHold._Disney_Template_v1&workspace=Workspace1&host=vm-rhauswirth2.otxlab.net&dropTemplate=true&startApplication=true
+USER: pyan:__casemanager__

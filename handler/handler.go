@@ -40,6 +40,8 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.GET("/getTaxonomies", h.getTaxonomies)
 	e.GET("/getRedactionReasons", h.getRedactionReasons)
 
+	e.POST("/createApplication", h.createApplication)
+
 	e.POST("/submitFtpIngestionData", h.submiteFtpIngestionData)
 	e.POST("/submitTagger", h.submitTagger)
 
@@ -50,7 +52,7 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.POST("/addCustodian", h.addCustodian)
 }
 
-type SubmitQueryParams struct {
+type DataIngestionParams struct {
 	Application string
 	Engine      string
 	Datasource  string
@@ -62,7 +64,7 @@ type SubmitQueryParams struct {
 // getParams extracts query parameters from the given echo context and returns them as a SubmitQueryParams
 // It also removes the leading slash from the ftpPath parameter if present and adds the "ftp://localhost/"
 // prefix to it.
-func getParams(c echo.Context) SubmitQueryParams {
+func getParams(c echo.Context) DataIngestionParams {
 
 	// remove leading slash
 	ftpPath := c.QueryParam("ftpPath")
@@ -71,7 +73,7 @@ func getParams(c echo.Context) SubmitQueryParams {
 	}
 	ftpPath = fmt.Sprintf("ftp://localhost/%s", ftpPath)
 
-	return SubmitQueryParams{
+	return DataIngestionParams{
 		Application: c.QueryParam("application"),
 		Engine:      c.QueryParam("engine"),
 		Datasource:  c.QueryParam("dataSource"),
@@ -302,6 +304,19 @@ func (h *Handler) importUsersAndGroups(c echo.Context) error {
 
 	userGroupInput, err := service.GetUsersGroupsRoles(tempFile)
 	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	users, groups, err := h.service.ADPsvc.GetAllUsersAndGroups()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	if err := service.VerifyUsers(userGroupInput.Users, users); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	if err := service.VerifyGroups(userGroupInput.Groups, groups); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
@@ -574,4 +589,76 @@ func (h *Handler) getHosts(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, res)
+}
+
+// NOTES: binding query parameters in echo only works with GET/DELETE
+type CreateApplicationQueryParams struct {
+	ApplicationName string
+	Workspace       string
+	Host            string
+	Template        string
+}
+
+func (h *Handler) createApplication(c echo.Context) error {
+	opts, err := checkCreateApplicationParams(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	res, err := h.service.ADPsvc.CreateApplication(opts...)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	// newAppID := res.ApplicationIdentifier
+	if c.QueryParam("dropTemplate") == "true" {
+		log.Debug().Msgf("dropping template: %s", res.ApplicationIdentifier)
+		err = h.service.ADPsvc.DropTemplate(res.ApplicationIdentifier)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+	}
+
+	if c.QueryParam("startApplication") == "true" {
+		log.Debug().Msgf("starting application: %s", res.ApplicationIdentifier)
+		executionID, err := h.service.ADPsvc.StartApplicationAsync(res.ApplicationIdentifier)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+		log.Debug().Msgf("executionID: %s", executionID)
+	}
+
+	return nil
+}
+
+func checkCreateApplicationParams(c echo.Context) ([]func(*adp.CreateApplicationConfiguration), error) {
+	queryParams := CreateApplicationQueryParams{
+		ApplicationName: c.QueryParam("applicationName"),
+		Workspace:       c.QueryParam("workspace"),
+		Host:            c.QueryParam("host"),
+		Template:        c.QueryParam("template"),
+	}
+
+	var opts []func(*adp.CreateApplicationConfiguration)
+	if queryParams.ApplicationName != "" {
+		opts = append(opts, adp.WithCreateApplicationApplicationName(queryParams.ApplicationName))
+	} else {
+		return nil, fmt.Errorf("applicationName is required")
+	}
+
+	if queryParams.Workspace != "" {
+		opts = append(opts, adp.WithCreateApplicationAppliationWorkspace(queryParams.Workspace))
+	}
+
+	if queryParams.Host != "" {
+		opts = append(opts, adp.WithCreateApplicationApplicationHost(queryParams.Host))
+	}
+
+	if queryParams.Template != "" {
+		opts = append(opts, adp.WithCreateApplicationApplicationTemplate(queryParams.Template))
+	} else {
+		return nil, fmt.Errorf("template is required")
+	}
+
+	return opts, nil
 }

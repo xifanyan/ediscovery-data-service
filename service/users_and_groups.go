@@ -153,6 +153,24 @@ func GetUsersGroupsRoles(fn string) (*UserGroupInput, error) {
 	}, nil
 }
 
+func VerifyUsers(input []adp.UserDefinition, users map[string]adp.User) error {
+	for _, u := range input {
+		if _, ok := users[u.UserName]; ok {
+			return fmt.Errorf("user %s exists already", u.UserName)
+		}
+	}
+	return nil
+}
+
+func VerifyGroups(input []adp.GroupDefinition, groups map[string]adp.Group) error {
+	for _, g := range input {
+		if _, ok := groups[g.GroupName]; ok {
+			return fmt.Errorf("group %s exists already", g.GroupName)
+		}
+	}
+	return nil
+}
+
 func VerifyApplications(documentHolds []adp.Entity, applicationRoles []adp.ApplicationRoles) error {
 	var allowedApplications map[string]struct{} = make(map[string]struct{})
 
