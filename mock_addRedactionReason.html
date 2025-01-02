@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock-Up Web Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input {
+            width: 95%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Add ReDaction Reason</h1>
+    <form>
+        <label for="application">Application:</label>
+        <select id="application">
+            <option value="app1">APP #1</option>
+            <option value="app2">APP #2</option>
+            <option value="app3">APP #3</option>
+        </select>
+
+        <label for="redactionReason">Current Redaction Reasons:</label>
+        <select id="redactionReason">
+            <option value="rr1">REASON #1</option>
+            <option value="rr2">REASON #2</option>
+            <option value="rr3">REASON #3</option>
+        </select>
+
+        <label for="reason">New Reason:</label>
+        <input id="reason"></input>
+
+        <button type="submit">Add Redaction Reasons</button>
+    </form>
+
+</body>
+</html>
+
+
