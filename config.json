@@ -14,8 +14,8 @@
       "endpoint": "searchWebApi"
     },
     "roles": {
-      "CaseManager": "__casemanager__",
-      "Ftp": "__ftp__"
+      "CaseManager": "__role1__,__role2__,__casemanager__",
+      "Ftp": "__role1__"
     },
     "log": {
       "level": "debug",

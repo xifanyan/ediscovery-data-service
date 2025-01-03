@@ -1,6 +1,6 @@
 ### getApplications
 GET http://localhost:8080/getApplications
-USER: pyan:__casemanager__
+USER: pyan:__role2__
 
 ### getRnaApplications
 GET http://localhost:8080/getRnaApplications

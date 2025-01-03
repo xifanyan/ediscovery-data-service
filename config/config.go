@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
@@ -26,7 +29,8 @@ type Config struct {
 		Path    string `json:"path"`
 		Console bool   `json:"console"`
 	}
-	Roles map[string]string `json:"roles"`
+	Roles   map[string]string `json:"roles"`
+	RoleMap map[string]map[string]struct{}
 }
 
 func LoadConfig(name string) (Config, error) {
@@ -42,17 +46,29 @@ func LoadConfig(name string) (Config, error) {
 		return Config{}, fmt.Errorf("failed to parse config file: %v", err)
 	}
 
-	cfg.Roles = reverseRolesMap(cfg.Roles)
+	cfg.RoleMap = getRoleMap(cfg.Roles)
+	log.Debug().Msgf("cfg.RoleMap: %+v", cfg.RoleMap)
 
 	return cfg, nil
 }
 
-func reverseRolesMap(m map[string]string) map[string]string {
-	reversed := make(map[string]string, len(m))
-	for k, v := range m {
-		reversed[v] = k
+func getRoleMap(m map[string]string) map[string]map[string]struct{} {
+	// initialize nested map
+	roleMap := make(map[string]map[string]struct{})
+	for k := range m {
+		roleMap[k] = make(map[string]struct{})
 	}
-	return reversed
+
+	for k, v := range m {
+		roles := strings.Split(v, ",")
+		for _, role := range roles {
+			role = strings.TrimSpace(role)
+			if role != "" {
+				roleMap[k][role] = struct{}{}
+			}
+		}
+	}
+	return roleMap
 }
 
 func (cfg Config) EchoAddress() string {

@@ -47,7 +47,9 @@ func UserAuthMiddleware(cfg config.Config) echo.MiddlewareFunc {
 
 func isCaseManager(cfg config.Config, userInfo UserInfo) bool {
 	for role := range userInfo.Roles {
-		if cfg.Roles[role] == "CaseManager" {
+		m := cfg.RoleMap["CaseManager"]
+		log.Debug().Msgf("RoleMap: %+v, role: %s", m, role)
+		if _, ok := m[role]; ok {
 			return true
 		}
 	}
@@ -74,6 +76,8 @@ func parseUserHeader(header string) (UserInfo, error) {
 	if len(roles) == 0 {
 		return userInfo, fmt.Errorf("at least one role is required")
 	}
+
+	log.Debug().Msgf("username: %s, roles: %v", username, roles)
 
 	return UserInfo{
 		Name:  username,
