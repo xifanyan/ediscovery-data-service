@@ -22,7 +22,8 @@ type Config struct {
 		Endpoint string `json:"endpoint"`
 	} `json:"searchWebAPI"`
 	Echo struct {
-		Port int `json:"port"`
+		Host string `json:"host"`
+		Port int    `json:"port"`
 	} `json:"echo"`
 	Log struct {
 		Level   string `json:"level"`
@@ -85,5 +86,5 @@ func getRoleMap(m map[string]string) map[string]map[string]struct{} {
 }
 
 func (cfg Config) EchoAddress() string {
-	return fmt.Sprintf("localhost:%d", cfg.Echo.Port)
+	return fmt.Sprintf("%s:%d", cfg.Echo.Host, cfg.Echo.Port)
 }

@@ -1,9 +1,10 @@
 {
     "echo": {
+      "host": "localhost",
       "port": 8080
     },
     "adp": {
-      "domain": "vm-rhauswirth2.otxlab.net",
+      "domain": "mmatzat-box.otxlab.net",
       "port": 8443,
       "user": "adpuser",
       "password": "adpus3r"

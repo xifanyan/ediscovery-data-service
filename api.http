@@ -15,7 +15,7 @@ GET http://localhost:8080/getDataSourceTemplates
 USER: pyan:__casemanager__
 
 ### getCustodians
-GET http://localhost:8080/getCustodians?application=documentHold.demo00001
+GET http://localhost:8080/getCustodians?application=documentHold.cm_test
 USER: pyan:__casemanager__
 
 ### submitFtpIngestionData
