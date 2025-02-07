@@ -84,6 +84,20 @@ func getParams(c echo.Context) DataIngestionParams {
 
 }
 
+func (h *Handler) handleADPError(c echo.Context, err error) error {
+	return c.JSON(
+		http.StatusInternalServerError,
+		echo.Map{"error": err.Error()},
+	)
+}
+
+func (h *Handler) handleValidationError(c echo.Context, err error) error {
+	return c.JSON(
+		http.StatusBadRequest,
+		echo.Map{"error": err.Error()},
+	)
+}
+
 // submiteFtpIngestionData submits a new ftp ingestion datasource to the ADP server with the given parameters.
 //
 // It first creates a new datasource with the given identifier and template.
@@ -111,7 +125,7 @@ func (h *Handler) submiteFtpIngestionData(c echo.Context) error {
 
 	if err := h.service.ADPsvc.CreateDataSource(opts...); err != nil {
 		log.Error().Err(err).Msg("failed to create datasource")
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	configs := []adp.ConfigTableMapsArg{
@@ -154,7 +168,7 @@ func (h *Handler) submiteFtpIngestionData(c echo.Context) error {
 		adp.WithConfigureDataSourceMetaDataMappingToConfigTables(configs),
 	); err != nil {
 		log.Error().Err(err).Msg("failed to configure datasource")
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	if err := h.service.ADPsvc.StartDataSource(
@@ -162,10 +176,10 @@ func (h *Handler) submiteFtpIngestionData(c echo.Context) error {
 		adp.WithStartDataSourceSynchronous(false),
 	); err != nil {
 		log.Error().Err(err).Msg("failed to start datasource")
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
-	return c.JSON(http.StatusOK, "Submitted")
+	return c.JSON(http.StatusOK, nil)
 }
 
 // getDocumentHolds returns all document holds the user has access to.
@@ -177,7 +191,7 @@ func (h *Handler) getDocumentHolds(c echo.Context) error {
 
 	res, err := h.service.ADPsvc.ListDocumentHoldsByUser(userName)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -192,7 +206,7 @@ func (h *Handler) getAxcelerates(c echo.Context) error {
 
 	res, err := h.service.ADPsvc.ListAxceleratesByUser(userName)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -206,7 +220,7 @@ func (h *Handler) getAxcelerates(c echo.Context) error {
 func (h *Handler) getEngines(c echo.Context) error {
 	app := c.QueryParam("application")
 	if app == "" {
-		return c.JSON(http.StatusBadRequest, "application is required")
+		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
 	userName := c.Get("user").(string)
@@ -219,8 +233,9 @@ func (h *Handler) getEngines(c echo.Context) error {
 
 	res, err := h.service.ADPsvc.ListEntities(opts...)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
+
 	return c.JSON(http.StatusOK, res)
 }
 
@@ -232,13 +247,14 @@ func (h *Handler) getEngines(c echo.Context) error {
 func (h *Handler) getCustodians(c echo.Context) error {
 	app := c.QueryParam("application")
 	if app == "" {
-		return c.JSON(http.StatusBadRequest, "application is required")
+		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
 	res, err := h.service.ADPsvc.GetCustodiansByApplicationID(app)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
+
 	return c.JSON(http.StatusOK, res)
 }
 
@@ -251,7 +267,7 @@ func (h *Handler) getDataSourceTemplates(c echo.Context) error {
 	userName := c.Get("user").(string)
 	res, err := h.service.ADPsvc.ListDatasourcesByUser(userName)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	var templates []adp.Entity
@@ -262,7 +278,10 @@ func (h *Handler) getDataSourceTemplates(c echo.Context) error {
 	}
 
 	if len(templates) == 0 {
-		return c.JSON(http.StatusBadRequest, "no templates found")
+		return c.JSON(
+			http.StatusNotFound,
+			echo.Map{"error": service.ErrTemplateNotFound.Error()},
+		)
 	}
 
 	return c.JSON(http.StatusOK, templates)
@@ -364,6 +383,9 @@ func (h *Handler) submitTagger(c echo.Context) error {
 	var err error
 
 	application := c.QueryParam("application")
+	if application == "" {
+		return h.handleValidationError(c, service.ErrApplicationRequired)
+	}
 
 	parts := strings.Split(application, ".")
 	applicationType := parts[0]
@@ -390,7 +412,7 @@ func (h *Handler) submitTagger(c echo.Context) error {
 	)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, nil)
@@ -399,7 +421,7 @@ func (h *Handler) submitTagger(c echo.Context) error {
 func (h *Handler) getGlobalSearches(c echo.Context) error {
 	resp, err := h.service.ADPsvc.GlobalSearches()
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	var globalSearchIDs []string
@@ -412,13 +434,12 @@ func (h *Handler) getGlobalSearches(c echo.Context) error {
 func (h *Handler) getTaxonomies(c echo.Context) error {
 	app := c.QueryParam("application")
 	if app == "" {
-		return c.JSON(http.StatusBadRequest, "application is required")
+		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
-	log.Debug().Msgf("application: %s", app)
 	entities, err := h.service.ADPsvc.ListEntitiesByRelatedEntity("dataModel", app)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	dataModel := entities[0].ID
@@ -426,7 +447,7 @@ func (h *Handler) getTaxonomies(c echo.Context) error {
 
 	props, err := h.service.ADPsvc.GetIndexConfigurationTable(dataModel)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	taxonomies := []string{}
@@ -441,13 +462,13 @@ func (h *Handler) getTaxonomies(c echo.Context) error {
 func (h *Handler) getFieldProperties(c echo.Context) error {
 	app := c.QueryParam("application")
 	if app == "" {
-		return c.JSON(http.StatusBadRequest, "application is required")
+		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
 	log.Debug().Msgf("application: %s", app)
 	entities, err := h.service.ADPsvc.ListEntitiesByRelatedEntity("dataModel", app)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	dataModel := entities[0].ID
@@ -455,7 +476,7 @@ func (h *Handler) getFieldProperties(c echo.Context) error {
 
 	props, err := h.service.ADPsvc.GetFieldProperties(dataModel)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	fieldProperties := make(map[string]string)
@@ -524,12 +545,12 @@ func (h *Handler) importGlobalSearchesAndTaggers(c echo.Context) error {
 func (h *Handler) getRedactionReasons(c echo.Context) error {
 	app := c.QueryParam("application")
 	if app == "" {
-		return c.JSON(http.StatusBadRequest, "application is required")
+		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
 	res, err := h.service.ADPsvc.GetCategories(app, "rmRedactReason")
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -538,17 +559,17 @@ func (h *Handler) getRedactionReasons(c echo.Context) error {
 func (h *Handler) addRedactionReason(c echo.Context) error {
 	app := c.QueryParam("application")
 	if app == "" {
-		return c.JSON(http.StatusBadRequest, "application is required")
+		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
 	redactionReason := c.QueryParam("redactionReason")
 	if redactionReason == "" {
-		return c.JSON(http.StatusBadRequest, "redactionReason is required")
+		return h.handleValidationError(c, service.ErrRedactionReasonRequired)
 	}
 
 	res, err := h.service.ADPsvc.CreateOrUpdateCategory(app, "Redaction Reason", redactionReason, redactionReason)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -557,17 +578,17 @@ func (h *Handler) addRedactionReason(c echo.Context) error {
 func (h *Handler) addCustodian(c echo.Context) error {
 	app := c.QueryParam("application")
 	if app == "" {
-		return c.JSON(http.StatusBadRequest, "application is required")
+		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
 	custodian := c.QueryParam("custodian")
 	if custodian == "" {
-		return c.JSON(http.StatusBadRequest, "custodian is required")
+		return h.handleValidationError(c, service.ErrCustodianRequired)
 	}
 
 	res, err := h.service.ADPsvc.CreateOrUpdateCategory(app, "Custodian", custodian, custodian)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -576,7 +597,7 @@ func (h *Handler) addCustodian(c echo.Context) error {
 func (h *Handler) getWorkspaces(c echo.Context) error {
 	res, err := h.service.ADPsvc.ListWorkspaces()
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -585,7 +606,7 @@ func (h *Handler) getWorkspaces(c echo.Context) error {
 func (h *Handler) getHosts(c echo.Context) error {
 	res, err := h.service.ADPsvc.ListHosts()
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -601,13 +622,15 @@ type CreateApplicationQueryParams struct {
 
 func (h *Handler) createApplication(c echo.Context) error {
 	opts, err := checkCreateApplicationParams(c)
+
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		log.Debug().Msgf("check create application params: %+v", err)
+		return h.handleValidationError(c, err)
 	}
 
 	res, err := h.service.ADPsvc.CreateApplication(opts...)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return h.handleADPError(c, err)
 	}
 
 	// newAppID := res.ApplicationIdentifier
@@ -615,7 +638,7 @@ func (h *Handler) createApplication(c echo.Context) error {
 		log.Debug().Msgf("dropping template: %s", res.ApplicationIdentifier)
 		err = h.service.ADPsvc.DropTemplate(res.ApplicationIdentifier)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
+			return h.handleADPError(c, err)
 		}
 	}
 
@@ -623,7 +646,7 @@ func (h *Handler) createApplication(c echo.Context) error {
 		log.Debug().Msgf("starting application: %s", res.ApplicationIdentifier)
 		executionID, err := h.service.ADPsvc.StartApplicationAsync(res.ApplicationIdentifier)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
+			return h.handleADPError(c, err)
 		}
 		log.Debug().Msgf("executionID: %s", executionID)
 	}
@@ -643,7 +666,7 @@ func checkCreateApplicationParams(c echo.Context) ([]func(*adp.CreateApplication
 	if queryParams.ApplicationName != "" {
 		opts = append(opts, adp.WithCreateApplicationApplicationName(queryParams.ApplicationName))
 	} else {
-		return nil, fmt.Errorf("applicationName is required")
+		return nil, service.ErrApplicationNameRequired
 	}
 
 	if queryParams.Workspace != "" {
@@ -657,7 +680,7 @@ func checkCreateApplicationParams(c echo.Context) ([]func(*adp.CreateApplication
 	if queryParams.Template != "" {
 		opts = append(opts, adp.WithCreateApplicationApplicationTemplate(queryParams.Template))
 	} else {
-		return nil, fmt.Errorf("template is required")
+		return nil, service.ErrTemplateRequired
 	}
 
 	return opts, nil
