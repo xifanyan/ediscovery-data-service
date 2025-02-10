@@ -8,6 +8,7 @@ var (
 	ErrRedactionReasonRequired = errors.New("redactionReason is required")
 	ErrCustodianRequired       = errors.New("custodian is required")
 	ErrTemplateRequired        = errors.New("template is required")
+	ErrValidEntityTypeRequired = errors.New("valid entity type is required")
 
 	ErrTemplateNotFound = errors.New("template not found")
 )

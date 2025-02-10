@@ -14,6 +14,10 @@ USER: pyan:__casemanager__
 GET http://localhost:8080/getDataSourceTemplates
 USER: pyan:__casemanager__
 
+### getTemplates
+GET http://localhost:8080/getTemplates?entityType=documentHold
+USER: pyan:__role2__
+
 ### getCustodians
 GET http://localhost:8080/getCustodians?application=documentHold.demo00001
 USER: pyan:__casemanager__

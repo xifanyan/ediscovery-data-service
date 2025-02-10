@@ -28,6 +28,7 @@ func NewHandler(service *service.Service) *Handler {
 
 func (h *Handler) SetupRouter(e *echo.Echo) {
 
+	e.GET("/getTemplates", h.getTemplates)
 	e.GET("/getWorkspaces", h.getWorkspaces)
 	e.GET("/getHosts", h.getHosts)
 	e.GET("/getApplications", h.getDocumentHolds)
@@ -684,4 +685,28 @@ func checkCreateApplicationParams(c echo.Context) ([]func(*adp.CreateApplication
 	}
 
 	return opts, nil
+}
+
+func (h *Handler) getTemplates(c echo.Context) error {
+	var err error
+
+	userName := c.Get("user").(string)
+	entityType := c.QueryParam("entityType")
+
+	var availableTemplates []adp.Entity
+
+	switch entityType {
+	case "documentHold", "axcelerate", "dataSource", "singleMindServer", "mergingMeta":
+		availableTemplates, err = h.service.ADPsvc.ListAvailableTemplates(entityType, userName)
+		if err != nil {
+			return h.handleADPError(c, err)
+		}
+		if len(availableTemplates) == 0 {
+			return c.JSON(http.StatusNotFound, echo.Map{"error": service.ErrTemplateNotFound.Error()})
+		}
+	default:
+		return h.handleValidationError(c, service.ErrValidEntityTypeRequired)
+	}
+
+	return c.JSON(http.StatusOK, availableTemplates)
 }
