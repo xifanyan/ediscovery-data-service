@@ -91,3 +91,23 @@ USER: pyan:__casemanager__
 ### createApplication
 POST http://localhost:8080/createApplication?applicationName=NewApp2&template=documentHold._Disney_Template_v1&workspace=Workspace1&host=vm-rhauswirth2.otxlab.net&dropTemplate=true&startApplication=true
 USER: pyan:__casemanager__
+
+//
+// Examples: /entity/:entityType?workspace=[Workspace Name]&globalTemplate=[true/false]&security=[true/false]
+// Notes:
+//   1. security is true by default, have to explicitly set to false to disable.
+//   2. globalTemplate is false by default.
+//   3. if workspace is empty, then load from all workspaces.
+//
+
+### 1: get global templates of documentHold from all.
+GET http://localhost:8080/entity/documentHold?security=false&globalTemplate=true
+USER: pyan:__casemanager__
+
+### 2: get documentHolds the user has access from Workspace1.
+GET http://localhost:8080/entity/documentHold?workspace=Workspace1
+USER: pyan:__casemanager__
+
+### 3: get all documentHolds (security needs to be set to false explicitly).
+GET http://localhost:8080/entity/documentHold?security=false
+USER: pyan:__casemanager__

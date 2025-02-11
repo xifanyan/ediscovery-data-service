@@ -41,6 +41,8 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.GET("/getTaxonomies", h.getTaxonomies)
 	e.GET("/getRedactionReasons", h.getRedactionReasons)
 
+	e.GET("/entity/:entityType", h.getEntity)
+
 	e.POST("/createApplication", h.createApplication)
 
 	e.POST("/submitFtpIngestionData", h.submiteFtpIngestionData)
@@ -97,6 +99,48 @@ func (h *Handler) handleValidationError(c echo.Context, err error) error {
 		http.StatusBadRequest,
 		echo.Map{"error": err.Error()},
 	)
+}
+
+func (h *Handler) getEntity(c echo.Context) error {
+	userName := c.Get("user").(string)
+
+	entityType := c.Param("entityType")
+	switch entityType {
+	case "documentHold", "axcelerate", "dataSource", "singleMindServer", "mergingMeta":
+		var opts []func(*adp.ListEntitiesConfiguration)
+
+		opts = append(opts, adp.WithListEntitiesType(entityType))
+
+		if c.QueryParam("security") != "false" {
+			opts = append(opts, adp.WithListEntitiesUserHasAccess(userName))
+		}
+		if c.QueryParam("workspace") != "" {
+			opts = append(opts, adp.WithListEntitiesWorkspace(c.QueryParam("workspace")))
+		}
+		entities, err := h.service.ADPsvc.ListEntities(opts...)
+		if err != nil {
+			return h.handleADPError(c, err)
+		}
+
+		if c.QueryParam("globalTemplate") == "true" {
+			var selected []adp.Entity
+			for _, entity := range entities {
+				if entity.GlobalTemplateFlag {
+					selected = append(selected, entity)
+				}
+			}
+			entities = selected
+		}
+
+		if len(entities) == 0 {
+			return c.JSON(http.StatusNotFound, echo.Map{"error": service.ErrEntityNotFound.Error()})
+		}
+
+		return c.JSON(http.StatusOK, entities)
+	default:
+		return h.handleValidationError(c, service.ErrValidEntityTypeRequired)
+	}
+
 }
 
 // submiteFtpIngestionData submits a new ftp ingestion datasource to the ADP server with the given parameters.
