@@ -50,7 +50,9 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 
 	e.POST("/createApplication", h.createApplication)
 
-	e.POST("/submitFtpIngestionData", h.submiteFtpIngestionData)
+	e.POST("/submitFtpIngestionData", h.submitFtpIngestionData)
+	e.POST("/submitFileIngestionData", h.submitFileIngestionData)
+
 	e.POST("/submitTagger", h.submitTagger)
 
 	e.POST("/importUsersAndGroups", h.importUsersAndGroups)
@@ -66,13 +68,20 @@ type DataIngestionParams struct {
 	Datasource  string
 	Template    string
 	Custodian   string
-	FtpPath     string
+	Path        string
 }
 
-// getParams extracts query parameters from the given echo context and returns them as a SubmitQueryParams
-// It also removes the leading slash from the ftpPath parameter if present and adds the "ftp://localhost/"
-// prefix to it.
-func getParams(c echo.Context) DataIngestionParams {
+func newDataIngestionParams(c echo.Context) *DataIngestionParams {
+	return &DataIngestionParams{
+		Application: c.QueryParam("application"),
+		Engine:      c.QueryParam("engine"),
+		Datasource:  c.QueryParam("dataSource"),
+		Template:    c.QueryParam("dataSourceTemplate"),
+		Custodian:   c.QueryParam("custodian"),
+	}
+}
+
+func geFtpParams(c echo.Context) DataIngestionParams {
 
 	// remove leading slash
 	ftpPath := c.QueryParam("ftpPath")
@@ -81,15 +90,21 @@ func getParams(c echo.Context) DataIngestionParams {
 	}
 	ftpPath = fmt.Sprintf("ftp://localhost/%s", ftpPath)
 
-	return DataIngestionParams{
-		Application: c.QueryParam("application"),
-		Engine:      c.QueryParam("engine"),
-		Datasource:  c.QueryParam("dataSource"),
-		Template:    c.QueryParam("dataSourceTemplate"),
-		Custodian:   c.QueryParam("custodian"),
-		FtpPath:     ftpPath,
-	}
+	params := newDataIngestionParams(c)
+	params.Path = ftpPath
 
+	return *params
+}
+
+func geFileParams(c echo.Context) DataIngestionParams {
+
+	filePath := c.QueryParam("filePath")
+
+	params := newDataIngestionParams(c)
+	params.Path = filePath
+	log.Debug().Msgf("params: %+v", params)
+
+	return *params
 }
 
 func (h *Handler) handleADPError(c echo.Context, err error) error {
@@ -148,20 +163,7 @@ func (h *Handler) getEntity(c echo.Context) error {
 
 }
 
-// submiteFtpIngestionData submits a new ftp ingestion datasource to the ADP server with the given parameters.
-//
-// It first creates a new datasource with the given identifier and template.
-// If the engine parameter is given, it will configure the datasource to use the given engine,
-// otherwise it will configure the datasource to use the given application.
-// It will then configure the datasource to ingest the given ftp path with the given custodian.
-// Finally, it will start the datasource asynchronously.
-//
-// It will return a 400 response if any of the above steps fail.
-func (h *Handler) submiteFtpIngestionData(c echo.Context) error {
-
-	params := getParams(c)
-	log.Debug().Msgf("params: %+v", params)
-
+func createDataSourceOptions(params DataIngestionParams) []func(*adp.CreateDataSourceConfiguration) {
 	opts := []func(*adp.CreateDataSourceConfiguration){
 		adp.WithCreateDatasourceDatasourceIdentifier(params.Datasource),
 		adp.WithCreateDatasourceDatasourceTemplate(params.Template),
@@ -173,11 +175,10 @@ func (h *Handler) submiteFtpIngestionData(c echo.Context) error {
 		opts = append(opts, adp.WithCreateDatasourceApplicationIdentifier(params.Application))
 	}
 
-	if err := h.service.ADPsvc.CreateDataSource(opts...); err != nil {
-		log.Error().Err(err).Msg("failed to create datasource")
-		return h.handleADPError(c, err)
-	}
+	return opts
+}
 
+func configDataSourceOptions(params DataIngestionParams) []func(*adp.ConfigureDataSourceConfiguration) {
 	configs := []adp.ConfigTableMapsArg{
 		{
 			Action:       "Update",
@@ -185,7 +186,7 @@ func (h *Handler) submiteFtpIngestionData(c echo.Context) error {
 			Row:          0,
 			Substitution: "",
 			TableName:    "crawlSeedURIs",
-			Value:        params.FtpPath,
+			Value:        params.Path,
 		},
 		{
 			Action:       "Update",
@@ -213,23 +214,54 @@ func (h *Handler) submiteFtpIngestionData(c echo.Context) error {
 		},
 	}
 
-	if err := h.service.ADPsvc.ConfigureDataSource(
+	opts := []func(*adp.ConfigureDataSourceConfiguration){
 		adp.WithConfigureDataSourceNames(params.Datasource),
 		adp.WithConfigureDataSourceMetaDataMappingToConfigTables(configs),
-	); err != nil {
+	}
+	return opts
+}
+
+func startDataSourceOptions(params DataIngestionParams) []func(*adp.StartDataSourceConfiguration) {
+	opts := []func(*adp.StartDataSourceConfiguration){
+		adp.WithStartDataSourceDataSourceName(params.Datasource),
+		adp.WithStartDataSourceSynchronous(false),
+	}
+	return opts
+}
+
+func (h *Handler) submitIngestionData(c echo.Context, params DataIngestionParams) error {
+	log.Debug().Msgf("params: %+v", params)
+
+	createDataSourceOpts := createDataSourceOptions(params)
+	if err := h.service.ADPsvc.CreateDataSource(createDataSourceOpts...); err != nil {
+		log.Error().Err(err).Msg("failed to create datasource")
+		return h.handleADPError(c, err)
+	}
+
+	configDataSourceOpts := configDataSourceOptions(params)
+	if err := h.service.ADPsvc.ConfigureDataSource(configDataSourceOpts...); err != nil {
 		log.Error().Err(err).Msg("failed to configure datasource")
 		return h.handleADPError(c, err)
 	}
 
-	if err := h.service.ADPsvc.StartDataSource(
-		adp.WithStartDataSourceDataSourceName(params.Datasource),
-		adp.WithStartDataSourceSynchronous(false),
-	); err != nil {
+	startDataSourceOpts := startDataSourceOptions(params)
+	if err := h.service.ADPsvc.StartDataSource(startDataSourceOpts...); err != nil {
 		log.Error().Err(err).Msg("failed to start datasource")
 		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, nil)
+}
+
+func (h *Handler) submitFtpIngestionData(c echo.Context) error {
+	params := geFtpParams(c)
+	return h.submitIngestionData(c, params)
+
+}
+
+func (h *Handler) submitFileIngestionData(c echo.Context) error {
+	params := geFileParams(c)
+	return h.submitIngestionData(c, params)
 }
 
 // getDocumentHolds returns all document holds the user has access to.

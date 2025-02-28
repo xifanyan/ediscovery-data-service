@@ -20,7 +20,7 @@
       "Ftp": "__role1__"
     },
     "log": {
-      "level": "debug",
+      "level": "trace",
       "path": "logs/ediscovery_service.log",
       "console": true
     }
