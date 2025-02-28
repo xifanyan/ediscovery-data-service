@@ -26,6 +26,9 @@ USER: pyan:__casemanager__
 POST http://localhost:8080/submitFtpIngestionData?application=documentHold.demo00001&engine=singleMindServer.demo00001&dataSource=ftp_demo_01&dataSourceTemplate=_DS_FTP_Template&custodian=democust&ftpPath=dstest
 USER: pyan:__casemanager__
 
+### submitFileIngestionData
+POST http://localhost:8080/submitFileIngestionData?application=documentHold.demo00001&engine=singleMindServer.demo00001&dataSource=file_demo_01&dataSourceTemplate=_DS_FTP_Template&custodian=democust&FilePath=\\nas\root\file
+USER: pyan:__casemanager__
 ### submitTagger
 POST http://localhost:8080/submitTagger?application=axcelerate.RH_ECA4_RH_Matter1&id=tagdemo1&globalSearch=all_plain_text_files&termTaxonomy=meta_bcc&typeTaxonomy=meta_cc
 USER: pyan:__casemanager__
@@ -110,4 +113,16 @@ USER: pyan:__casemanager__
 
 ### 3: get all documentHolds (security needs to be set to false explicitly).
 GET http://localhost:8080/entity/documentHold?security=false
+USER: pyan:__casemanager__
+
+### 4: get all documentHolds (security needs to be set to false explicitly).
+GET http://localhost:8080/entity/dataSource?security=false&globalTemplate=true
+USER: pyan:__casemanager__
+
+### users
+GET http://localhost:8080/users/
+USER: pyan:__casemanager__
+
+### groups 
+GET http://localhost:8080/groups
 USER: pyan:__casemanager__

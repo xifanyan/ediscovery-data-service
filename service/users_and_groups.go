@@ -187,8 +187,8 @@ func VerifyApplications(documentHolds []adp.Entity, applicationRoles []adp.Appli
 	return nil
 }
 
-func SetupManageUsersAndGroupsOptions(input *UserGroupInput) []func(*adp.ManageUsersAndGruopsConfiguration) {
-	var opts []func(*adp.ManageUsersAndGruopsConfiguration) = []func(*adp.ManageUsersAndGruopsConfiguration){}
+func SetupManageUsersAndGroupsOptions(input *UserGroupInput) []func(*adp.ManageUsersAndGroupsConfiguration) {
+	var opts []func(*adp.ManageUsersAndGroupsConfiguration) = []func(*adp.ManageUsersAndGroupsConfiguration){}
 
 	if len(input.Users) > 0 {
 		opts = append(opts, adp.WithManageUsersAndGroupsUserDefinition(input.Users))

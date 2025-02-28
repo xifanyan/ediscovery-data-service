@@ -43,6 +43,11 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 
 	e.GET("/entity/:entityType", h.getEntity)
 
+	e.GET("/users", h.getUsers)
+	e.GET("/user/:userID", h.getUserByID)
+	e.GET("/groups", h.getGroups)
+	e.GET("/group/:groupID", h.getGroupByID)
+
 	e.POST("/createApplication", h.createApplication)
 
 	e.POST("/submitFtpIngestionData", h.submiteFtpIngestionData)
@@ -395,7 +400,7 @@ func (h *Handler) importUsersAndGroups(c echo.Context) error {
 	}
 	log.Debug().Msgf("user [%s] has access to all applications in the sheet", userName)
 
-	var opts []func(*adp.ManageUsersAndGruopsConfiguration) = []func(*adp.ManageUsersAndGruopsConfiguration){}
+	var opts []func(*adp.ManageUsersAndGroupsConfiguration) = []func(*adp.ManageUsersAndGroupsConfiguration){}
 
 	opts = service.SetupManageUsersAndGroupsOptions(userGroupInput)
 	resp, err := h.service.ADPsvc.ManageUsersAndGroups(opts...)
@@ -411,7 +416,7 @@ func (h *Handler) importUsersAndGroups(c echo.Context) error {
 	appIDs := strings.Join(ids, ",")
 	log.Debug().Msgf("ids: %+v", ids)
 
-	opts = []func(*adp.ManageUsersAndGruopsConfiguration){
+	opts = []func(*adp.ManageUsersAndGroupsConfiguration){
 		adp.WithManageUsersAndGroupsAppIdsToFilterFor(appIDs),
 		adp.WithManageUsersAndGroupsReturnAllUsersUnderGroup("true"),
 	}
@@ -753,4 +758,54 @@ func (h *Handler) getTemplates(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, availableTemplates)
+}
+
+func (h *Handler) getUsers(c echo.Context) error {
+	users, _, err := h.service.ADPsvc.GetAllUsersAndGroups()
+	if err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	if len(users) == 0 {
+		return c.JSON(http.StatusNotFound, echo.Map{"error": service.ErrUserNotFound.Error()})
+	}
+	return c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) getUserByID(c echo.Context) error {
+	id := c.Param("userID")
+	users, err := h.service.ADPsvc.GetUsersByID(id)
+	if err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	if len(users) == 0 {
+		return c.JSON(http.StatusNotFound, echo.Map{"error": service.ErrUserNotFound.Error()})
+	}
+	return c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) getGroups(c echo.Context) error {
+	_, groups, rec := h.service.ADPsvc.GetAllUsersAndGroups()
+	if rec != nil {
+		return h.handleADPError(c, rec)
+	}
+
+	if len(groups) == 0 {
+		return c.JSON(http.StatusNotFound, echo.Map{"error": service.ErrGroupNotFound.Error()})
+	}
+	return c.JSON(http.StatusOK, groups)
+}
+
+func (h *Handler) getGroupByID(c echo.Context) error {
+	id := c.Param("groupID")
+	groups, err := h.service.ADPsvc.GetGroupsByID(id)
+	if err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	if len(groups) == 0 {
+		return c.JSON(http.StatusNotFound, echo.Map{"error": service.ErrGroupNotFound.Error()})
+	}
+	return c.JSON(http.StatusOK, groups)
 }
