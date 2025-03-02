@@ -121,9 +121,21 @@ GET http://localhost:8080/entity/dataSource?security=false&globalTemplate=true
 USER: pyan:__casemanager__
 
 ### users
-GET http://localhost:8080/users/
+GET http://localhost:8080/users
+USER: pyan:__casemanager__
+
+### users by ID
+GET http://localhost:8080/users/demouser1
 USER: pyan:__casemanager__
 
 ### groups 
 GET http://localhost:8080/groups
+USER: pyan:__casemanager__
+
+### group by ID
+GET http://localhost:8080/groups/demogroup1
+USER: pyan:__casemanager__
+
+### users under speicifc group
+GET http://localhost:8080/groups/demogroup1/users
 USER: pyan:__casemanager__

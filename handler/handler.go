@@ -44,9 +44,11 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.GET("/entity/:entityType", h.getEntity)
 
 	e.GET("/users", h.getUsers)
-	e.GET("/user/:userID", h.getUserByID)
+	e.GET("/users/:userID", h.getUserByID)
 	e.GET("/groups", h.getGroups)
-	e.GET("/group/:groupID", h.getGroupByID)
+	e.GET("/groups/:groupID", h.getGroupByID)
+
+	e.GET("/groups/:groupID/users", h.getUsersByGroupID)
 
 	e.POST("/createApplication", h.createApplication)
 
@@ -806,15 +808,12 @@ func (h *Handler) getUsers(c echo.Context) error {
 
 func (h *Handler) getUserByID(c echo.Context) error {
 	id := c.Param("userID")
-	users, err := h.service.ADPsvc.GetUsersByID(id)
+	user, err := h.service.ADPsvc.GetUserByID(id)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
 
-	if len(users) == 0 {
-		return c.JSON(http.StatusNotFound, echo.Map{"error": service.ErrUserNotFound.Error()})
-	}
-	return c.JSON(http.StatusOK, users)
+	return c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) getGroups(c echo.Context) error {
@@ -831,7 +830,17 @@ func (h *Handler) getGroups(c echo.Context) error {
 
 func (h *Handler) getGroupByID(c echo.Context) error {
 	id := c.Param("groupID")
-	groups, err := h.service.ADPsvc.GetGroupsByID(id)
+	group, err := h.service.ADPsvc.GetGroupByID(id)
+	if err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, group)
+}
+
+func (h *Handler) getUsersByGroupID(c echo.Context) error {
+	id := c.Param("groupID")
+	groups, err := h.service.ADPsvc.GetUsersByGroupID(id)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
