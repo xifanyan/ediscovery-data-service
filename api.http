@@ -120,6 +120,10 @@ USER: pyan:__casemanager__
 GET http://localhost:8080/entity/dataSource?security=false&globalTemplate=true
 USER: pyan:__casemanager__
 
+###
+### User Group Management Section
+###
+
 ### users
 GET http://localhost:8080/users
 USER: pyan:__casemanager__
@@ -139,3 +143,33 @@ USER: pyan:__casemanager__
 ### users under speicifc group
 GET http://localhost:8080/groups/demogroup1/users
 USER: pyan:__casemanager__
+
+### groups associated with a specific user
+GET http://localhost:8080/users/demouser2/groups
+USER: pyan:__casemanager__
+
+### add users
+POST http://localhost:8080/users
+USER: pyan:__casemanager__
+content-type: application/json
+
+[
+    {
+        "User name": "demouser4",
+        "Password": "demous3r4",
+        "External user": true,
+        "Enabled": true
+    }
+]
+
+### add groups 
+POST http://localhost:8080/groups
+USER: pyan:__casemanager__
+content-type: application/json
+
+[
+    {
+        "Group name": "demogroup4",
+        "Enabled": true
+    }
+]
