@@ -91,6 +91,10 @@ github.com/xifanyan/adp v0.0.0-20250302065919-c409a17806e5 h1:7wGqAxSMhCOBJp2SS8
 github.com/xifanyan/adp v0.0.0-20250302065919-c409a17806e5/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
 github.com/xifanyan/adp v0.0.0-20250302071434-c1e26be139a6 h1:xMuG15Z0jBflpc6noYvblDQXvMDyPXlznfKutYdDSHo=
 github.com/xifanyan/adp v0.0.0-20250302071434-c1e26be139a6/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
+github.com/xifanyan/adp v0.0.0-20250302175831-94708dc1eb17 h1:FVmfbYpYMaI1lAin1v/+tgPOIEq9OA3UxmZKfGjpk9M=
+github.com/xifanyan/adp v0.0.0-20250302175831-94708dc1eb17/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
+github.com/xifanyan/adp v0.0.0-20250308183425-c5b8630b0f3a h1:j0ZN/U55Z9rN46lbxU13DKs948SB1LUTNXrpsgPI6cU=
+github.com/xifanyan/adp v0.0.0-20250308183425-c5b8630b0f3a/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
 github.com/xuri/efp v0.0.0-20231025114914-d1ff6096ae53 h1:Chd9DkqERQQuHpXjR/HSV1jLZA6uaoiwwH3vSuF3IW0=
 github.com/xuri/efp v0.0.0-20231025114914-d1ff6096ae53/go.mod h1:ybY/Jr0T0GTCnYjKqmdwxyxn2BQf2RcQIIvex5QldPI=
 github.com/xuri/excelize/v2 v2.8.1 h1:pZLMEwK8ep+CLIUWpWmvW8IWE/yxqG0I1xcN6cVMGuQ=
