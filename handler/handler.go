@@ -43,12 +43,17 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 
 	e.GET("/entity/:entityType", h.getEntity)
 
+	// User and Group Management
 	e.GET("/users", h.getUsers)
 	e.GET("/users/:userID", h.getUserByID)
 	e.GET("/groups", h.getGroups)
 	e.GET("/groups/:groupID", h.getGroupByID)
 
+	e.POST("/users", h.createUsers)
+	e.POST("/groups", h.createGroups)
+
 	e.GET("/groups/:groupID/users", h.getUsersByGroupID)
+	e.GET("/users/:userID/groups", h.getGroupsByUserID)
 
 	e.POST("/createApplication", h.createApplication)
 
@@ -848,5 +853,49 @@ func (h *Handler) getUsersByGroupID(c echo.Context) error {
 	if len(groups) == 0 {
 		return c.JSON(http.StatusNotFound, echo.Map{"error": service.ErrGroupNotFound.Error()})
 	}
+	return c.JSON(http.StatusOK, groups)
+}
+
+func (h *Handler) getGroupsByUserID(c echo.Context) error {
+	id := c.Param("userID")
+	groups, err := h.service.ADPsvc.GetGroupsByUserID(id)
+	if err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, groups)
+}
+
+func (h *Handler) createUsers(c echo.Context) error {
+	var users []adp.UserDefinition
+
+	err := c.Bind(&users)
+	if err != nil {
+		return h.handleValidationError(c, err)
+	}
+
+	log.Debug().Msgf("users: %+v", users)
+
+	if err := h.service.ADPsvc.AddUser(users); err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, users)
+}
+
+func (h *Handler) createGroups(c echo.Context) error {
+	var groups []adp.GroupDefinition
+
+	err := c.Bind(&groups)
+	if err != nil {
+		return h.handleValidationError(c, err)
+	}
+
+	log.Debug().Msgf("groups: %+v", groups)
+
+	if err := h.service.ADPsvc.AddGroup(groups); err != nil {
+		return h.handleADPError(c, err)
+	}
+
 	return c.JSON(http.StatusOK, groups)
 }

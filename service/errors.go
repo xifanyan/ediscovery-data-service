@@ -14,4 +14,6 @@ var (
 	ErrGroupNotFound    = errors.New("groupnot found")
 	ErrEntityNotFound   = errors.New("entity not found")
 	ErrTemplateNotFound = errors.New("template not found")
+
+	ErrNotImplemented = errors.New("not implemented")
 )
