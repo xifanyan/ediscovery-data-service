@@ -48,6 +48,7 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.GET("/users/:userID", h.getUserByID)
 	e.GET("/groups", h.getGroups)
 	e.GET("/groups/:groupID", h.getGroupByID)
+	e.GET("/application/:applicationID/usersAndGroups", h.getUsersAndGroupsByApplicationID)
 
 	e.POST("/users", h.createUsers)
 	e.POST("/groups", h.createGroups)
@@ -935,4 +936,15 @@ func (h *Handler) addUsersOrGroupsToApplication(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{"message": "Users or groups added to application successfully"})
+}
+
+func (h *Handler) getUsersAndGroupsByApplicationID(c echo.Context) error {
+	applicationID := c.Param("applicationID")
+
+	users, groups, err := h.service.ADPsvc.GetUsersAndGroupsByApplicationID(applicationID)
+	if err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"users": users, "groups": groups})
 }
