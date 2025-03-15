@@ -51,6 +51,9 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 
 	e.POST("/users", h.createUsers)
 	e.POST("/groups", h.createGroups)
+	e.POST("/group/:groupID/users", h.addUsersToGroup)
+	e.POST("/application/:applicationID/users", h.addUsersOrGroupsToApplication)
+	e.POST("/application/:applicationID/groups", h.addUsersOrGroupsToApplication)
 
 	e.GET("/groups/:groupID/users", h.getUsersByGroupID)
 	e.GET("/users/:userID/groups", h.getGroupsByUserID)
@@ -876,7 +879,7 @@ func (h *Handler) createUsers(c echo.Context) error {
 
 	log.Debug().Msgf("users: %+v", users)
 
-	if err := h.service.ADPsvc.AddUser(users); err != nil {
+	if err := h.service.ADPsvc.AddUsers(users); err != nil {
 		return h.handleADPError(c, err)
 	}
 
@@ -893,9 +896,43 @@ func (h *Handler) createGroups(c echo.Context) error {
 
 	log.Debug().Msgf("groups: %+v", groups)
 
-	if err := h.service.ADPsvc.AddGroup(groups); err != nil {
+	if err := h.service.ADPsvc.AddGroups(groups); err != nil {
 		return h.handleADPError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, groups)
+}
+
+func (h *Handler) addUsersToGroup(c echo.Context) error {
+	groupID := c.Param("groupID")
+
+	var users []string
+	err := c.Bind(&users)
+	if err != nil {
+		return h.handleValidationError(c, err)
+	}
+
+	if err := h.service.ADPsvc.AddUsersToGroup(users, groupID); err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "Users added to group successfully"})
+}
+
+func (h *Handler) addUsersOrGroupsToApplication(c echo.Context) error {
+	applicationID := c.Param("applicationID")
+
+	var usersOrGroups []string
+	err := c.Bind(&usersOrGroups)
+	if err != nil {
+		return h.handleValidationError(c, err)
+	}
+
+	log.Debug().Msgf("%s : usersOrGroups: %+v", applicationID, usersOrGroups)
+
+	if err := h.service.ADPsvc.AssignUsersOrGroupsToApplication(usersOrGroups, applicationID); err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "Users or groups added to application successfully"})
 }

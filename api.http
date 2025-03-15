@@ -173,3 +173,24 @@ content-type: application/json
         "Enabled": true
     }
 ]
+
+### add users to group
+POST http://localhost:8080/group/demogroup1/users
+USER: pyan:__casemanager__
+content-type: application/json
+
+[
+    "demouser1",
+    "demouser2",
+    "demouser3"
+]
+
+### add groups to application
+POST http://localhost:8080/application/documentHold.demo00001/groups
+USER: pyan:__casemanager__
+content-type: application/json
+
+[
+    "demogroup3"
+]
+
