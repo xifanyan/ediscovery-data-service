@@ -103,6 +103,9 @@ USER: pyan:__casemanager__
 //   2. globalTemplate is false by default.
 //   3. if workspace is empty, then load from all workspaces.
 //
+### create rna
+POST http://localhost:8080/createApplication?applicationName=NewReview&template=axcelerate._DEMO_Review_Template&workspace=Workspace1&host=vm-rhauswirth2.otxlab.net
+USER: pyan:__casemanager__
 
 ### 1: get global templates of documentHold from all.
 GET http://localhost:8080/entity/documentHold?security=false&globalTemplate=true

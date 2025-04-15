@@ -763,7 +763,7 @@ func checkCreateApplicationParams(c echo.Context) ([]func(*adp.CreateApplication
 	}
 
 	if queryParams.Workspace != "" {
-		opts = append(opts, adp.WithCreateApplicationAppliationWorkspace(queryParams.Workspace))
+		opts = append(opts, adp.WithCreateApplicationApplicationWorkspace(queryParams.Workspace))
 	}
 
 	if queryParams.Host != "" {
