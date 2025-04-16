@@ -92,8 +92,12 @@ USER: pyan:__casemanager__
 GET http://localhost:8080/getHosts
 USER: pyan:__casemanager__
 
-### createApplication
-POST http://localhost:8080/createApplication?applicationName=NewApp2&template=documentHold._Disney_Template_v1&workspace=Workspace1&host=vm-rhauswirth2.otxlab.net&dropTemplate=true&startApplication=true
+### create ECA application
+POST http://localhost:8080/createApplication?applicationType=documentHold&applicationName=NewIngestionApp&template=documentHold._Disney_Template_v1&workspace=Workspace1&host=vm-rhauswirth2.otxlab.net&dropTemplate=true&startApplication=true
+USER: pyan:__casemanager__
+
+### create RNA application
+POST http://localhost:8080/createApplication?applicationType=axcelerateStandalone&applicationName=NewReviewApp&template=axcelerate._DEMO_Review_Template&workspace=Workspace1&host=vm-rhauswirth2.otxlab.net&startApplication=true
 USER: pyan:__casemanager__
 
 //
@@ -103,9 +107,6 @@ USER: pyan:__casemanager__
 //   2. globalTemplate is false by default.
 //   3. if workspace is empty, then load from all workspaces.
 //
-### create rna
-POST http://localhost:8080/createApplication?applicationName=NewReview&template=axcelerate._DEMO_Review_Template&workspace=Workspace1&host=vm-rhauswirth2.otxlab.net
-USER: pyan:__casemanager__
 
 ### 1: get global templates of documentHold from all.
 GET http://localhost:8080/entity/documentHold?security=false&globalTemplate=true

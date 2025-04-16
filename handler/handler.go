@@ -707,6 +707,7 @@ func (h *Handler) getHosts(c echo.Context) error {
 
 // NOTES: binding query parameters in echo only works with GET/DELETE
 type CreateApplicationQueryParams struct {
+	ApplicationType string
 	ApplicationName string
 	Workspace       string
 	Host            string
@@ -749,6 +750,7 @@ func (h *Handler) createApplication(c echo.Context) error {
 
 func checkCreateApplicationParams(c echo.Context) ([]func(*adp.CreateApplicationConfiguration), error) {
 	queryParams := CreateApplicationQueryParams{
+		ApplicationType: c.QueryParam("applicationType"),
 		ApplicationName: c.QueryParam("applicationName"),
 		Workspace:       c.QueryParam("workspace"),
 		Host:            c.QueryParam("host"),
@@ -756,6 +758,13 @@ func checkCreateApplicationParams(c echo.Context) ([]func(*adp.CreateApplication
 	}
 
 	var opts []func(*adp.CreateApplicationConfiguration)
+	if queryParams.ApplicationType == "documentHold" || queryParams.ApplicationType == "axcelerateStandalone" {
+		opts = append(opts, adp.WithCreateApplicationApplicationType(queryParams.ApplicationType))
+	} else {
+		return nil, service.ErrApplicationTypeNotSupported
+	}
+
+	opts = append(opts, adp.WithCreateApplicationApplicationType(queryParams.ApplicationType))
 	if queryParams.ApplicationName != "" {
 		opts = append(opts, adp.WithCreateApplicationApplicationName(queryParams.ApplicationName))
 	} else {

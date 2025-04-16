@@ -10,6 +10,8 @@ var (
 	ErrTemplateRequired        = errors.New("template is required")
 	ErrValidEntityTypeRequired = errors.New("valid entity type is required")
 
+	ErrApplicationTypeNotSupported = errors.New("application type not supported")
+
 	ErrUserNotFound     = errors.New("user not found")
 	ErrGroupNotFound    = errors.New("groupnot found")
 	ErrEntityNotFound   = errors.New("entity not found")
