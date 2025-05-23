@@ -51,6 +51,39 @@ Content-Type: application/octet-stream
 GET http://localhost:8080/getGlobalSearches
 USER: pyan:__casemanager__
 
+### createGlobalSearches
+POST http://localhost:8080/createGlobalSearches
+USER: pyan:__casemanager__
+content-type: application/json
+
+[
+    {
+        "displayName" : "abc",
+        "queries": [
+            "1234",
+            "hello",
+            "world"
+        ]
+    }
+]
+
+### updateGlobalSearches
+POST http://localhost:8080/updateGlobalSearches
+USER: pyan:__casemanager__
+content-type: application/json
+
+[
+    {
+        "id" : "savedSearch.abc",
+        "queries": [
+            "4321",
+            "hello",
+            "people"
+        ]
+    }
+]
+
+
 ### getFieldProperties
 GET http://localhost:8080/getFieldProperties?application=axcelerate.RH_ECA4_RH_Matter1
 USER: pyan:__casemanager__

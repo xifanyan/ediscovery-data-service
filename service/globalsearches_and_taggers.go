@@ -48,7 +48,7 @@ func getTaggers(rows [][]string) []TaggerSetting {
 	return settings
 }
 
-func getGlobalSearches(rows [][]string) []adp.GlobalSearch {
+func getGlobalSearchConfigurationFromSheet(rows [][]string) []adp.GlobalSearch {
 	var currentSearch adp.GlobalSearch
 	var globalSearches []adp.GlobalSearch
 
@@ -126,7 +126,7 @@ func GetGloalSearchesAndTaggers(fn string) (*GlobalSearchesAndTaggersInput, erro
 
 	rows, err = f.GetRows("GlobalSearches")
 	if len(rows) > 0 {
-		input.GlobalSearchSettings = getGlobalSearches(rows)
+		input.GlobalSearchSettings = getGlobalSearchConfigurationFromSheet(rows)
 	}
 
 	return input, err

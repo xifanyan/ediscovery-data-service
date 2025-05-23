@@ -105,6 +105,14 @@ github.com/xifanyan/adp v0.0.0-20250315060926-31f8e87d68d3 h1:Dktnn7Gzfw9B/POCA4
 github.com/xifanyan/adp v0.0.0-20250315060926-31f8e87d68d3/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
 github.com/xifanyan/adp v0.0.0-20250415224126-c1449632b14d h1:AeXu2YPPKEzhVQBbz//QKrS1CWx7QZXuzhzun5ojA1E=
 github.com/xifanyan/adp v0.0.0-20250415224126-c1449632b14d/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
+github.com/xifanyan/adp v0.0.0-20250522220507-fc990a0caeab h1:Pdv8v7UZgAWVC6a0EBSEbueUD6k6kzb8aeeGBZX4gYo=
+github.com/xifanyan/adp v0.0.0-20250522220507-fc990a0caeab/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
+github.com/xifanyan/adp v0.0.0-20250523000413-11af184568e5 h1:3ozXAsP/8Ir8crBA71cDjm/OAkQbzqspOJ7rHMAYi/Y=
+github.com/xifanyan/adp v0.0.0-20250523000413-11af184568e5/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
+github.com/xifanyan/adp v0.0.0-20250523004833-4dcbabbb6165 h1:uXXoaIVBTU1ZgZAwOK94BLPHlSbAqIu7bRo+N60QcI4=
+github.com/xifanyan/adp v0.0.0-20250523004833-4dcbabbb6165/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
+github.com/xifanyan/adp v0.0.0-20250523044153-ddacade83e87 h1:Y3OsOtu3seKqcCTeKbk5MgS83VTjKLEy61o9VeNURTE=
+github.com/xifanyan/adp v0.0.0-20250523044153-ddacade83e87/go.mod h1:syodmEEjZzehsPWX6QijdAKTbnEgjLZDIuuOpJ1nM8U=
 github.com/xuri/efp v0.0.0-20231025114914-d1ff6096ae53 h1:Chd9DkqERQQuHpXjR/HSV1jLZA6uaoiwwH3vSuF3IW0=
 github.com/xuri/efp v0.0.0-20231025114914-d1ff6096ae53/go.mod h1:ybY/Jr0T0GTCnYjKqmdwxyxn2BQf2RcQIIvex5QldPI=
 github.com/xuri/excelize/v2 v2.8.1 h1:pZLMEwK8ep+CLIUWpWmvW8IWE/yxqG0I1xcN6cVMGuQ=

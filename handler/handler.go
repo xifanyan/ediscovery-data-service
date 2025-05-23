@@ -64,6 +64,10 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.POST("/submitFtpIngestionData", h.submitFtpIngestionData)
 	e.POST("/submitFileIngestionData", h.submitFileIngestionData)
 
+	e.GET("/getGlobalSearches", h.getGlobalSearches)
+	e.POST("/createGlobalSearches", h.createGlobalSearches)
+	e.POST("/updateGlobalSearches", h.updateGlobalSearches)
+
 	e.POST("/submitTagger", h.submitTagger)
 
 	e.POST("/importUsersAndGroups", h.importUsersAndGroups)
@@ -511,19 +515,6 @@ func (h *Handler) submitTagger(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-func (h *Handler) getGlobalSearches(c echo.Context) error {
-	resp, err := h.service.ADPsvc.GlobalSearches()
-	if err != nil {
-		return h.handleADPError(c, err)
-	}
-
-	var globalSearchIDs []string
-	for _, gs := range resp {
-		globalSearchIDs = append(globalSearchIDs, gs.ID)
-	}
-	return c.JSON(http.StatusOK, globalSearchIDs)
-}
-
 func (h *Handler) getTaxonomies(c echo.Context) error {
 	app := c.QueryParam("application")
 	if app == "" {
@@ -956,4 +947,48 @@ func (h *Handler) getUsersAndGroupsByApplicationID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{"users": users, "groups": groups})
+}
+
+func (h *Handler) getGlobalSearches(c echo.Context) error {
+	res, err := h.service.ADPsvc.ListGlobalSearches()
+	if err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) createGlobalSearches(c echo.Context) error {
+	var gsdef []adp.GlobalSearchDefinition
+
+	err := c.Bind(&gsdef)
+	if err != nil {
+		return h.handleValidationError(c, err)
+	}
+
+	log.Debug().Msgf("[New] Global Search Definition: %+v", gsdef)
+
+	res, err := h.service.ADPsvc.CreateGlobalSearches(gsdef)
+	if err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) updateGlobalSearches(c echo.Context) error {
+	var gsdef []adp.GlobalSearchDefinition
+
+	err := c.Bind(&gsdef)
+	if err != nil {
+		return h.handleValidationError(c, err)
+	}
+	log.Debug().Msgf("[Update] Global Search Definition: %+v", gsdef)
+
+	res, err := h.service.ADPsvc.UpdateGlobalSearches(gsdef)
+	if err != nil {
+		return h.handleADPError(c, err)
+	}
+
+	return c.JSON(http.StatusOK, res)
 }
