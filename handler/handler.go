@@ -923,15 +923,26 @@ func (h *Handler) addUsersToGroup(c echo.Context) error {
 func (h *Handler) addUsersOrGroupsToApplication(c echo.Context) error {
 	applicationID := c.Param("applicationID")
 
-	var usersOrGroups []string
-	err := c.Bind(&usersOrGroups)
+	var inputRoles []adp.UserOrGroupToRoles
+	err := c.Bind(&inputRoles)
 	if err != nil {
 		return h.handleValidationError(c, err)
 	}
 
-	log.Debug().Msgf("%s : usersOrGroups: %+v", applicationID, usersOrGroups)
+	// Convert UserOrGroupToRoles to ApplicationRoles
+	var appRoles []adp.ApplicationRoles
+	for _, role := range inputRoles {
+		appRoles = append(appRoles, adp.ApplicationRoles{
+			Enabled:               true,
+			GroupOrUserName:       role.Name,
+			ApplicationIdentifier: applicationID,
+			Roles:                 role.Roles,
+		})
+	}
 
-	if err := h.service.ADPsvc.AssignUsersOrGroupsToApplication(usersOrGroups, applicationID); err != nil {
+	log.Debug().Msgf("%s : converted roles: %+v", applicationID, appRoles)
+
+	if err := h.service.ADPsvc.AssignUsersOrGroupsToApplication(appRoles, applicationID); err != nil {
 		return h.handleADPError(c, err)
 	}
 
