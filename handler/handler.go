@@ -203,30 +203,35 @@ func configDataSourceOptions(params DataIngestionParams) []func(*adp.ConfigureDa
 			TableName:    "crawlSeedURIs",
 			Value:        params.Path,
 		},
-		{
-			Action:       "Update",
-			Column:       "0",
-			Row:          0,
-			Substitution: "",
-			TableName:    "crawlLocationClassifierRules",
-			Value:        "*",
-		},
-		{
-			Action:       "Update",
-			Column:       "1",
-			Row:          0,
-			Substitution: "",
-			TableName:    "crawlLocationClassifierRules",
-			Value:        params.Custodian,
-		},
-		{
-			Action:       "Update",
-			Column:       "2",
-			Row:          0,
-			Substitution: "",
-			TableName:    "crawlLocationClassifierRules",
-			Value:        "rm_custodian",
-		},
+	}
+
+	if params.Custodian != "" {
+		configs = append(configs,
+			adp.ConfigTableMapsArg{
+				Action:       "Update",
+				Column:       "0",
+				Row:          0,
+				Substitution: "",
+				TableName:    "crawlLocationClassifierRules",
+				Value:        "*",
+			},
+			adp.ConfigTableMapsArg{
+				Action:       "Update",
+				Column:       "1",
+				Row:          0,
+				Substitution: "",
+				TableName:    "crawlLocationClassifierRules",
+				Value:        params.Custodian,
+			},
+			adp.ConfigTableMapsArg{
+				Action:       "Update",
+				Column:       "2",
+				Row:          0,
+				Substitution: "",
+				TableName:    "crawlLocationClassifierRules",
+				Value:        "rm_custodian",
+			},
+		)
 	}
 
 	opts := []func(*adp.ConfigureDataSourceConfiguration){
