@@ -947,7 +947,7 @@ func (h *Handler) addUsersOrGroupsToApplication(c echo.Context) error {
 
 	log.Debug().Msgf("%s : converted roles: %+v", applicationID, appRoles)
 
-	if err := h.service.ADPsvc.AssignUsersOrGroupsToApplication(appRoles, applicationID); err != nil {
+	if err := h.service.ADPsvc.AssignUsersOrGroupsToApplication(appRoles); err != nil {
 		return h.handleADPError(c, err)
 	}
 
