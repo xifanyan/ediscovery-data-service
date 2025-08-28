@@ -146,15 +146,19 @@ func (h *Handler) getEntity(c echo.Context) error {
 
 		opts = append(opts, adp.WithListEntitiesType(entityType))
 
-		if c.QueryParam("security") != "false" {
-			opts = append(opts, adp.WithListEntitiesUserHasAccess(userName))
-		}
 		if c.QueryParam("workspace") != "" {
 			opts = append(opts, adp.WithListEntitiesWorkspace(c.QueryParam("workspace")))
 		}
 		entities, err := h.service.ADPsvc.ListEntities(opts...)
 		if err != nil {
 			return h.handleADPError(c, err)
+		}
+
+		if c.QueryParam("security") != "false" {
+			entities, err = h.service.ADPsvc.FindApplicationsUserHasAccess(entities, userName)
+			if err != nil {
+				return h.handleADPError(c, err)
+			}
 		}
 
 		if c.QueryParam("globalTemplate") == "true" {
