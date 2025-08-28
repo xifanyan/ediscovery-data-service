@@ -161,8 +161,8 @@ USER: pyan:__casemanager__
 GET http://localhost:8080/entity/axcelerate?security=true&globalTemplate=false&workspace=Workspace1
 USER: pyan:__casemanager__
 
-### 6: get all singleMindServers
-GET http://localhost:8080/entity/singleMindServer
+### 6: get all singleMindServers, security flag does not apply for mindserver, datasource etc.
+GET http://localhost:8080/entity/singleMindServer?workspace=Workspace1
 USER: pyan:__casemanager__
 
 ### 5
