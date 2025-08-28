@@ -143,13 +143,14 @@ func (h *Handler) getEntity(c echo.Context) error {
 	switch entityType {
 	case "documentHold", "axcelerate":
 		var opts []func(*adp.ListEntitiesConfiguration)
-
 		opts = append(opts, adp.WithListEntitiesType(entityType))
 
 		if c.QueryParam("workspace") != "" {
 			opts = append(opts, adp.WithListEntitiesWorkspace(c.QueryParam("workspace")))
 		}
+
 		entities, err := h.service.ADPsvc.ListEntities(opts...)
+
 		if err != nil {
 			return h.handleADPError(c, err)
 		}
@@ -176,6 +177,41 @@ func (h *Handler) getEntity(c echo.Context) error {
 		}
 
 		return c.JSON(http.StatusOK, entities)
+
+	case "dataSource", "singleMindServer", "mergingMeta":
+		var opts []func(*adp.ListEntitiesConfiguration)
+		opts = append(opts, adp.WithListEntitiesType(entityType))
+
+		if c.QueryParam("workspace") != "" {
+			opts = append(opts, adp.WithListEntitiesWorkspace(c.QueryParam("workspace")))
+		}
+
+		// UserHasAccess does not apply here
+		// if c.QueryParam("security") != "false" {
+		//	opts = append(opts, adp.WithListEntitiesUserHasAccess(userName))
+		// }
+
+		entities, err := h.service.ADPsvc.ListEntities(opts...)
+		if err != nil {
+			return h.handleADPError(c, err)
+		}
+
+		if c.QueryParam("globalTemplate") == "true" {
+			var selected []adp.Entity
+			for _, entity := range entities {
+				if entity.GlobalTemplateFlag {
+					selected = append(selected, entity)
+				}
+			}
+			entities = selected
+		}
+
+		if len(entities) == 0 {
+			return c.JSON(http.StatusNotFound, echo.Map{"error": service.ErrEntityNotFound.Error()})
+		}
+
+		return c.JSON(http.StatusOK, entities)
+
 	default:
 		return h.handleValidationError(c, service.ErrValidEntityTypeRequired)
 	}
