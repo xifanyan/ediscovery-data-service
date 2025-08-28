@@ -141,7 +141,7 @@ func (h *Handler) getEntity(c echo.Context) error {
 
 	entityType := c.Param("entityType")
 	switch entityType {
-	case "documentHold", "axcelerate", "dataSource", "singleMindServer", "mergingMeta":
+	case "documentHold", "axcelerate":
 		var opts []func(*adp.ListEntitiesConfiguration)
 
 		opts = append(opts, adp.WithListEntitiesType(entityType))
