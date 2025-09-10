@@ -6,9 +6,7 @@
     "adp": {
       "domain": "vm-rhauswirth2.otxlab.net",
       "_domain": "mmatzat-box.otxlab.net",
-      "port": 8443,
-      "user": "adpuser",
-      "password": "adpus3r"
+      "port": 8443
     },
     "searchWebAPI": {
       "domain": "vm-rhauswirth2.otxlab.net",

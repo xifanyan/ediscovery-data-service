@@ -139,6 +139,8 @@ func (h *Handler) handleValidationError(c echo.Context, err error) error {
 func (h *Handler) getEntity(c echo.Context) error {
 	userName := c.Get("user").(string)
 
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+
 	entityType := c.Param("entityType")
 	switch entityType {
 	case "documentHold", "axcelerate":
@@ -149,14 +151,14 @@ func (h *Handler) getEntity(c echo.Context) error {
 			opts = append(opts, adp.WithListEntitiesWorkspace(c.QueryParam("workspace")))
 		}
 
-		entities, err := h.service.ADPsvc.ListEntities(opts...)
+		entities, err := adpService.ListEntities(opts...)
 
 		if err != nil {
 			return h.handleADPError(c, err)
 		}
 
 		if c.QueryParam("security") != "false" {
-			entities, err = h.service.ADPsvc.FindApplicationsUserHasAccess(entities, userName)
+			entities, err = adpService.FindApplicationsUserHasAccess(entities, userName)
 			if err != nil {
 				return h.handleADPError(c, err)
 			}
@@ -191,7 +193,7 @@ func (h *Handler) getEntity(c echo.Context) error {
 		//	opts = append(opts, adp.WithListEntitiesUserHasAccess(userName))
 		// }
 
-		entities, err := h.service.ADPsvc.ListEntities(opts...)
+		entities, err := adpService.ListEntities(opts...)
 		if err != nil {
 			return h.handleADPError(c, err)
 		}
@@ -292,20 +294,22 @@ func startDataSourceOptions(params DataIngestionParams) []func(*adp.StartDataSou
 func (h *Handler) submitIngestionData(c echo.Context, params DataIngestionParams) error {
 	log.Debug().Msgf("params: %+v", params)
 
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+
 	createDataSourceOpts := createDataSourceOptions(params)
-	if err := h.service.ADPsvc.CreateDataSource(createDataSourceOpts...); err != nil {
+	if err := adpService.CreateDataSource(createDataSourceOpts...); err != nil {
 		log.Error().Err(err).Msg("failed to create datasource")
 		return h.handleADPError(c, err)
 	}
 
 	configDataSourceOpts := configDataSourceOptions(params)
-	if err := h.service.ADPsvc.ConfigureDataSource(configDataSourceOpts...); err != nil {
+	if err := adpService.ConfigureDataSource(configDataSourceOpts...); err != nil {
 		log.Error().Err(err).Msg("failed to configure datasource")
 		return h.handleADPError(c, err)
 	}
 
 	startDataSourceOpts := startDataSourceOptions(params)
-	if err := h.service.ADPsvc.StartDataSource(startDataSourceOpts...); err != nil {
+	if err := adpService.StartDataSource(startDataSourceOpts...); err != nil {
 		log.Error().Err(err).Msg("failed to start datasource")
 		return h.handleADPError(c, err)
 	}
@@ -331,7 +335,9 @@ func (h *Handler) submitFileIngestionData(c echo.Context) error {
 func (h *Handler) getDocumentHolds(c echo.Context) error {
 	userName := c.Get("user").(string)
 
-	res, err := h.service.ADPsvc.ListDocumentHoldsByUser(userName)
+	// Use streamlined ADP service access with automatic credential handling
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.ListDocumentHoldsByUser(userName)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -346,7 +352,8 @@ func (h *Handler) getDocumentHolds(c echo.Context) error {
 func (h *Handler) getAxcelerates(c echo.Context) error {
 	userName := c.Get("user").(string)
 
-	res, err := h.service.ADPsvc.ListAxceleratesByUser(userName)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.ListAxceleratesByUser(userName)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -373,7 +380,8 @@ func (h *Handler) getEngines(c echo.Context) error {
 		adp.WithListEntitiesUserHasAccess(userName),
 	}
 
-	res, err := h.service.ADPsvc.ListEntities(opts...)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.ListEntities(opts...)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -392,7 +400,8 @@ func (h *Handler) getCustodians(c echo.Context) error {
 		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
-	res, err := h.service.ADPsvc.GetCustodiansByApplicationID(app)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.GetCustodiansByApplicationID(app)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -407,7 +416,9 @@ func (h *Handler) getCustodians(c echo.Context) error {
 // The result is then returned as JSON.
 func (h *Handler) getDataSourceTemplates(c echo.Context) error {
 	userName := c.Get("user").(string)
-	res, err := h.service.ADPsvc.ListDatasourcesByUser(userName)
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.ListDatasourcesByUser(userName)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -468,7 +479,9 @@ func (h *Handler) importUsersAndGroups(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	users, groups, err := h.service.ADPsvc.GetAllUsersAndGroups()
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+
+	users, groups, err := adpService.GetAllUsersAndGroups()
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -481,7 +494,7 @@ func (h *Handler) importUsersAndGroups(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	documentHolds, err := h.service.ADPsvc.ListDocumentHoldsByUser(userName)
+	documentHolds, err := adpService.ListDocumentHoldsByUser(userName)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -495,7 +508,7 @@ func (h *Handler) importUsersAndGroups(c echo.Context) error {
 	var opts []func(*adp.ManageUsersAndGroupsConfiguration) = []func(*adp.ManageUsersAndGroupsConfiguration){}
 
 	opts = service.SetupManageUsersAndGroupsOptions(userGroupInput)
-	resp, err := h.service.ADPsvc.ManageUsersAndGroups(opts...)
+	resp, err := adpService.ManageUsersAndGroups(opts...)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -512,7 +525,7 @@ func (h *Handler) importUsersAndGroups(c echo.Context) error {
 		adp.WithManageUsersAndGroupsAppIdsToFilterFor(appIDs),
 		adp.WithManageUsersAndGroupsReturnAllUsersUnderGroup("true"),
 	}
-	resp, err = h.service.ADPsvc.ManageUsersAndGroups(opts...)
+	resp, err = adpService.ManageUsersAndGroups(opts...)
 	log.Debug().Msgf("Load Application Security Setting Response: %+v", resp)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
@@ -546,7 +559,8 @@ func (h *Handler) submitTagger(c echo.Context) error {
 	js, _ := json.Marshal(tags)
 	log.Debug().Msgf("js: %+v", string(js))
 
-	err = h.service.ADPsvc.ManageTaggers(
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	err = adpService.ManageTaggers(
 		adp.WithAdpManTagsApplicationIdentifier(application),
 		adp.WithAdpManTagsApplicationType(applicationType),
 		adp.WithAdpManTagsJSONInstall(string(js)),
@@ -566,7 +580,8 @@ func (h *Handler) getTaxonomies(c echo.Context) error {
 		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
-	entities, err := h.service.ADPsvc.ListEntitiesByRelatedEntity("dataModel", app)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	entities, err := adpService.ListEntitiesByRelatedEntity("dataModel", app)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -574,7 +589,7 @@ func (h *Handler) getTaxonomies(c echo.Context) error {
 	dataModel := entities[0].ID
 	log.Debug().Msgf("get dataModel: %s", dataModel)
 
-	props, err := h.service.ADPsvc.GetIndexConfigurationTable(dataModel)
+	props, err := adpService.GetIndexConfigurationTable(dataModel)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -595,7 +610,10 @@ func (h *Handler) getFieldProperties(c echo.Context) error {
 	}
 
 	log.Debug().Msgf("application: %s", app)
-	entities, err := h.service.ADPsvc.ListEntitiesByRelatedEntity("dataModel", app)
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+
+	entities, err := adpService.ListEntitiesByRelatedEntity("dataModel", app)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -603,7 +621,7 @@ func (h *Handler) getFieldProperties(c echo.Context) error {
 	dataModel := entities[0].ID
 	log.Debug().Msgf("get dataModel: %s", dataModel)
 
-	props, err := h.service.ADPsvc.GetFieldProperties(dataModel)
+	props, err := adpService.GetFieldProperties(dataModel)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -640,7 +658,9 @@ func (h *Handler) importGlobalSearchesAndTaggers(c echo.Context) error {
 	js, _ := json.Marshal(settings.GlobalSearchSettings)
 	fmt.Println("js: ", adp.Prettify(string(js)))
 
-	_, err = h.service.ADPsvc.GlobalSearches(
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+
+	_, err = adpService.GlobalSearches(
 		adp.WithGlobalSearchesCreateUpdateGlobalSearches(string(js)),
 	)
 
@@ -657,7 +677,7 @@ func (h *Handler) importGlobalSearchesAndTaggers(c echo.Context) error {
 		parts := strings.Split(taggerSetting.Application, ".")
 		applicationType := parts[0]
 
-		err = h.service.ADPsvc.ManageTaggers(
+		err = adpService.ManageTaggers(
 			adp.WithAdpManTagsApplicationIdentifier(taggerSetting.Application),
 			adp.WithAdpManTagsApplicationType(applicationType),
 			adp.WithAdpManTagsJSONInstall(string(js)),
@@ -677,7 +697,8 @@ func (h *Handler) getRedactionReasons(c echo.Context) error {
 		return h.handleValidationError(c, service.ErrApplicationRequired)
 	}
 
-	res, err := h.service.ADPsvc.GetCategories(app, "rmRedactReason")
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.GetCategories(app, "rmRedactReason")
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -696,7 +717,8 @@ func (h *Handler) addRedactionReason(c echo.Context) error {
 		return h.handleValidationError(c, service.ErrRedactionReasonRequired)
 	}
 
-	res, err := h.service.ADPsvc.CreateOrUpdateCategory(app, "Redaction Reason", redactionReason, redactionReason)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.CreateOrUpdateCategory(app, "Redaction Reason", redactionReason, redactionReason)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -715,7 +737,8 @@ func (h *Handler) addCustodian(c echo.Context) error {
 		return h.handleValidationError(c, service.ErrCustodianRequired)
 	}
 
-	res, err := h.service.ADPsvc.CreateOrUpdateCategory(app, "Custodian", custodian, custodian)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.CreateOrUpdateCategory(app, "Custodian", custodian, custodian)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -724,7 +747,9 @@ func (h *Handler) addCustodian(c echo.Context) error {
 }
 
 func (h *Handler) getWorkspaces(c echo.Context) error {
-	res, err := h.service.ADPsvc.ListWorkspaces()
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.ListWorkspaces()
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -733,7 +758,9 @@ func (h *Handler) getWorkspaces(c echo.Context) error {
 }
 
 func (h *Handler) getHosts(c echo.Context) error {
-	res, err := h.service.ADPsvc.ListHosts()
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.ListHosts()
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -758,7 +785,9 @@ func (h *Handler) createApplication(c echo.Context) error {
 		return h.handleValidationError(c, err)
 	}
 
-	res, err := h.service.ADPsvc.CreateApplication(opts...)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+
+	res, err := adpService.CreateApplication(opts...)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -766,7 +795,7 @@ func (h *Handler) createApplication(c echo.Context) error {
 	// newAppID := res.ApplicationIdentifier
 	if c.QueryParam("dropTemplate") == "true" {
 		log.Debug().Msgf("dropping template: %s", res.ApplicationIdentifier)
-		err = h.service.ADPsvc.DropTemplate(res.ApplicationIdentifier)
+		err = adpService.DropTemplate(res.ApplicationIdentifier)
 		if err != nil {
 			return h.handleADPError(c, err)
 		}
@@ -774,7 +803,7 @@ func (h *Handler) createApplication(c echo.Context) error {
 
 	if c.QueryParam("startApplication") == "true" {
 		log.Debug().Msgf("starting application: %s", res.ApplicationIdentifier)
-		executionID, err := h.service.ADPsvc.StartApplicationAsync(res.ApplicationIdentifier)
+		executionID, err := adpService.StartApplicationAsync(res.ApplicationIdentifier)
 		if err != nil {
 			return h.handleADPError(c, err)
 		}
@@ -832,9 +861,11 @@ func (h *Handler) getTemplates(c echo.Context) error {
 
 	var availableTemplates []adp.Entity
 
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+
 	switch entityType {
 	case "documentHold", "axcelerate", "dataSource", "singleMindServer", "mergingMeta":
-		availableTemplates, err = h.service.ADPsvc.ListAvailableTemplates(entityType, userName)
+		availableTemplates, err = adpService.ListAvailableTemplates(entityType, userName)
 		if err != nil {
 			return h.handleADPError(c, err)
 		}
@@ -849,7 +880,9 @@ func (h *Handler) getTemplates(c echo.Context) error {
 }
 
 func (h *Handler) getUsers(c echo.Context) error {
-	users, _, err := h.service.ADPsvc.GetAllUsersAndGroups()
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	users, _, err := adpService.GetAllUsersAndGroups()
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -862,7 +895,9 @@ func (h *Handler) getUsers(c echo.Context) error {
 
 func (h *Handler) getUserByID(c echo.Context) error {
 	id := c.Param("userID")
-	user, err := h.service.ADPsvc.GetUserByID(id)
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	user, err := adpService.GetUserByID(id)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -871,7 +906,9 @@ func (h *Handler) getUserByID(c echo.Context) error {
 }
 
 func (h *Handler) getGroups(c echo.Context) error {
-	_, groups, rec := h.service.ADPsvc.GetAllUsersAndGroups()
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	_, groups, rec := adpService.GetAllUsersAndGroups()
 	if rec != nil {
 		return h.handleADPError(c, rec)
 	}
@@ -884,7 +921,9 @@ func (h *Handler) getGroups(c echo.Context) error {
 
 func (h *Handler) getGroupByID(c echo.Context) error {
 	id := c.Param("groupID")
-	group, err := h.service.ADPsvc.GetGroupByID(id)
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	group, err := adpService.GetGroupByID(id)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -894,7 +933,9 @@ func (h *Handler) getGroupByID(c echo.Context) error {
 
 func (h *Handler) getUsersByGroupID(c echo.Context) error {
 	id := c.Param("groupID")
-	groups, err := h.service.ADPsvc.GetUsersByGroupID(id)
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	groups, err := adpService.GetUsersByGroupID(id)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -907,7 +948,9 @@ func (h *Handler) getUsersByGroupID(c echo.Context) error {
 
 func (h *Handler) getGroupsByUserID(c echo.Context) error {
 	id := c.Param("userID")
-	groups, err := h.service.ADPsvc.GetGroupsByUserID(id)
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	groups, err := adpService.GetGroupsByUserID(id)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -925,7 +968,8 @@ func (h *Handler) createUsers(c echo.Context) error {
 
 	log.Debug().Msgf("users: %+v", users)
 
-	if err := h.service.ADPsvc.AddUsers(users); err != nil {
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	if err := adpService.AddUsers(users); err != nil {
 		return h.handleADPError(c, err)
 	}
 
@@ -942,7 +986,8 @@ func (h *Handler) createGroups(c echo.Context) error {
 
 	log.Debug().Msgf("groups: %+v", groups)
 
-	if err := h.service.ADPsvc.AddGroups(groups); err != nil {
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	if err := adpService.AddGroups(groups); err != nil {
 		return h.handleADPError(c, err)
 	}
 
@@ -958,7 +1003,8 @@ func (h *Handler) addUsersToGroup(c echo.Context) error {
 		return h.handleValidationError(c, err)
 	}
 
-	if err := h.service.ADPsvc.AddUsersToGroup(users, groupID); err != nil {
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	if err := adpService.AddUsersToGroup(users, groupID); err != nil {
 		return h.handleADPError(c, err)
 	}
 
@@ -987,7 +1033,8 @@ func (h *Handler) addUsersOrGroupsToApplication(c echo.Context) error {
 
 	log.Debug().Msgf("%s : converted roles: %+v", applicationID, appRoles)
 
-	if err := h.service.ADPsvc.AssignUsersOrGroupsToApplication(appRoles); err != nil {
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	if err := adpService.AssignUsersOrGroupsToApplication(appRoles); err != nil {
 		return h.handleADPError(c, err)
 	}
 
@@ -997,7 +1044,8 @@ func (h *Handler) addUsersOrGroupsToApplication(c echo.Context) error {
 func (h *Handler) getUsersAndGroupsByApplicationID(c echo.Context) error {
 	applicationID := c.Param("applicationID")
 
-	users, groups, err := h.service.ADPsvc.GetUsersAndGroupsByApplicationID(applicationID)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	users, groups, err := adpService.GetUsersAndGroupsByApplicationID(applicationID)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -1006,7 +1054,9 @@ func (h *Handler) getUsersAndGroupsByApplicationID(c echo.Context) error {
 }
 
 func (h *Handler) getGlobalSearches(c echo.Context) error {
-	res, err := h.service.ADPsvc.ListGlobalSearches()
+
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.ListGlobalSearches()
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -1024,7 +1074,8 @@ func (h *Handler) createGlobalSearches(c echo.Context) error {
 
 	log.Debug().Msgf("[New] Global Search Definition: %+v", gsdef)
 
-	res, err := h.service.ADPsvc.CreateGlobalSearches(gsdef)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.CreateGlobalSearches(gsdef)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}
@@ -1041,7 +1092,8 @@ func (h *Handler) updateGlobalSearches(c echo.Context) error {
 	}
 	log.Debug().Msgf("[Update] Global Search Definition: %+v", gsdef)
 
-	res, err := h.service.ADPsvc.UpdateGlobalSearches(gsdef)
+	adpService := h.service.ResetADPServiceWithContextCredential(c)
+	res, err := adpService.UpdateGlobalSearches(gsdef)
 	if err != nil {
 		return h.handleADPError(c, err)
 	}

@@ -100,6 +100,7 @@ func setupGlobalLogger(cfg config.Config) {
 
 func setupMiddleware(e *echo.Echo, cfg config.Config) {
 	e.Use(auth.UserAuthMiddleware(cfg))
+	e.Use(auth.ADPAuthMiddleware(cfg))
 
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:    true,

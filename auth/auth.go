@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strings"
@@ -40,6 +41,41 @@ func UserAuthMiddleware(cfg config.Config) echo.MiddlewareFunc {
 
 			// Set the parsed username in the context for potential use in subsequent handlers
 			c.Set("user", userInfo.Name)
+			return next(c)
+		}
+	}
+}
+
+// ADPAuthMiddleware provides ADP-specific authentication and authorization
+// It extracts ADP credentials from headers and sets them in the context for use by handlers
+func ADPAuthMiddleware(cfg config.Config) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			log.Debug().Msg("ADP Auth Middleware processing request")
+
+			// Extract ADP credentials from headers
+			adpToken := c.Request().Header.Get("ADP")
+			if adpToken == "" {
+				return echo.NewHTTPError(http.StatusBadRequest, "ADP Header is required")
+			}
+
+			decoded, err := base64.StdEncoding.DecodeString(adpToken)
+			if err != nil {
+				log.Warn().Err(err).Msg("Error decoding ADP token")
+				return echo.NewHTTPError(http.StatusBadRequest, "Error decoding ADP token")
+			}
+
+			items := strings.Split(string(decoded), ":")
+			if len(items) != 2 {
+				log.Warn().Msg("Invalid ADP token format")
+				return echo.NewHTTPError(http.StatusBadRequest, "Invalid ADP token format")
+			}
+
+			c.Set("adp_user", items[0])
+			c.Set("adp_password", items[1])
+
+			log.Debug().Msg("ADP token set in context")
+
 			return next(c)
 		}
 	}
