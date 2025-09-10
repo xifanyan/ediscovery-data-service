@@ -40,19 +40,19 @@ USER: pyan:__casemanager__
 POST http://localhost:8080/submitTagger?application=axcelerate.RH_ECA4_RH_Matter1&id=tagdemo1&globalSearch=all_plain_text_files&termTaxonomy=meta_bcc&typeTaxonomy=meta_cc
 USER: pyan:__casemanager__
 
+### DO NOT USE
 ### importUsersAndGroups
-POST http://localhost:8080/importUsersAndGroups
-ADP: YWRwdXNlcjphZHB1czNy
-USER: pyan:__casemanager__
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+### POST http://localhost:8080/importUsersAndGroups
+### USER: pyan:__casemanager__
+### Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
-usersAndGroups
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="usersAndGroups"; filename="usersAndGroups.xlsx"
-Content-Type: application/octet-stream
+### usersAndGroups
+### ------WebKitFormBoundary7MA4YWxkTrZu0gW
+### Content-Disposition: form-data; name="usersAndGroups"; filename="usersAndGroups.xlsx"
+### Content-Type: application/octet-stream
 
-< c:\Users\pyan\Downloads\usersAndGroups.xlsx
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
+### < c:\Users\pyan\Downloads\usersAndGroups.xlsx
+### ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ### getGlobalSavedSearches
 GET http://localhost:8080/getGlobalSearches
@@ -103,17 +103,17 @@ ADP: YWRwdXNlcjphZHB1czNy
 USER: pyan:__casemanager__
 
 ### importGlobalSearchesAndTaggers
-POST http://localhost:8080/importGlobalSearchesAndTaggers
-USER: pyan:__casemanager__
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+### POST http://localhost:8080/importGlobalSearchesAndTaggers
+### USER: pyan:__casemanager__
+### Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
-globalSearchesAndTaggers
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="globalSearchesAndTaggers"; filename="globalSearchesAndTaggers.xlsx"
-Content-Type: application/octet-stream
+### globalSearchesAndTaggers
+### ------WebKitFormBoundary7MA4YWxkTrZu0gW
+### Content-Disposition: form-data; name="globalSearchesAndTaggers"; filename="globalSearchesAndTaggers.xlsx"
+### Content-Type: application/octet-stream
 
-< c:\Users\pyan\Downloads\globalSearchesAndTaggers.xlsx
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
+### < c:\Users\pyan\Downloads\globalSearchesAndTaggers.xlsx
+### ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ### getRedactionReasons
 GET http://localhost:8080/getRedactionReasons?application=axcelerate.RH_ECA4_RH_Matter1

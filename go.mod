@@ -7,7 +7,7 @@ toolchain go1.23.4
 require (
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/rs/zerolog v1.34.0
-	github.com/xifanyan/adp v0.0.0-20250910173233-5f11f78bc420
+	github.com/xifanyan/adp v0.0.0-20250910212510-54607d3806eb
 	github.com/xuri/excelize/v2 v2.8.1
 )
 
