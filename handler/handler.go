@@ -78,22 +78,29 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 }
 
 type DataIngestionParams struct {
-	Application string
-	Engine      string
-	Datasource  string
-	Template    string
-	Custodian   string
-	Path        string
+	Application  string
+	Engine       string
+	Datasource   string
+	Template     string
+	Custodian    string
+	Path         string
+	CustomFields map[string]string
 }
 
 func newDataIngestionParams(c echo.Context) *DataIngestionParams {
-	return &DataIngestionParams{
-		Application: c.QueryParam("application"),
-		Engine:      c.QueryParam("engine"),
-		Datasource:  c.QueryParam("dataSource"),
-		Template:    c.QueryParam("dataSourceTemplate"),
-		Custodian:   c.QueryParam("custodian"),
+	params := DataIngestionParams{
+		Application:  c.QueryParam("application"),
+		Engine:       c.QueryParam("engine"),
+		Datasource:   c.QueryParam("dataSource"),
+		Template:     c.QueryParam("dataSourceTemplate"),
+		Custodian:    c.QueryParam("custodian"),
+		CustomFields: map[string]string{},
 	}
+
+	if err := c.Bind(&params.CustomFields); err != nil {
+		log.Warn().Err(err).Msg("Error binding custom fields")
+	}
+	return &params
 }
 
 func geFtpParams(c echo.Context) DataIngestionParams {
@@ -237,6 +244,7 @@ func createDataSourceOptions(params DataIngestionParams) []func(*adp.CreateDataS
 
 func configDataSourceOptions(params DataIngestionParams) []func(*adp.ConfigureDataSourceConfiguration) {
 	configs := []adp.ConfigTableMapsArg{
+		// Update crawl seed URI with the provided path
 		{
 			Action:       "Update",
 			Column:       "0",
@@ -245,42 +253,97 @@ func configDataSourceOptions(params DataIngestionParams) []func(*adp.ConfigureDa
 			TableName:    "crawlSeedURIs",
 			Value:        params.Path,
 		},
+		// Remove any auto-created entries to start with clean mapping
+		{
+			Action:       "Remove",
+			Column:       "0",
+			Row:          0,
+			Substitution: "",
+			TableName:    "crawlLocationClassifierRules",
+			Value:        "*",
+		},
 	}
 
-	if params.Custodian != "" {
+	// Helper function to create classifier rule entries
+	addClassifierRule := func(row int, pattern, value, field string) {
 		configs = append(configs,
 			adp.ConfigTableMapsArg{
-				Action:       "Update",
+				Action:       "Append",
 				Column:       "0",
-				Row:          0,
 				Substitution: "",
 				TableName:    "crawlLocationClassifierRules",
-				Value:        "*",
+				Value:        pattern,
 			},
 			adp.ConfigTableMapsArg{
 				Action:       "Update",
 				Column:       "1",
-				Row:          0,
+				Row:          row,
 				Substitution: "",
 				TableName:    "crawlLocationClassifierRules",
-				Value:        params.Custodian,
+				Value:        value,
 			},
 			adp.ConfigTableMapsArg{
 				Action:       "Update",
 				Column:       "2",
-				Row:          0,
+				Row:          row,
 				Substitution: "",
 				TableName:    "crawlLocationClassifierRules",
-				Value:        "rm_custodian",
+				Value:        field,
 			},
 		)
 	}
 
-	opts := []func(*adp.ConfigureDataSourceConfiguration){
+	row := 0
+
+	// Handle custom fields if present
+	if len(params.CustomFields) > 0 {
+		// Check if rm_custodian exists in custom fields, if not use query param
+		custodian := params.CustomFields["rm_custodian"]
+		if custodian == "" && params.Custodian != "" {
+			custodian = params.Custodian
+		}
+
+		// Check if rm_source exists in custom fields, if not use datasource from query param
+		source := params.CustomFields["rm_source"]
+		if source == "" && params.Datasource != "" {
+			source = params.Datasource
+		}
+
+		// Add all custom fields
+		for field, value := range params.CustomFields {
+			addClassifierRule(row, "*", value, field)
+			row++
+		}
+
+		// Add fallback mappings if they weren't in custom fields
+		if custodian != "" && params.CustomFields["rm_custodian"] == "" {
+			addClassifierRule(row, "*", custodian, "rm_custodian")
+			row++
+		}
+
+		if source != "" && params.CustomFields["rm_source"] == "" {
+			addClassifierRule(row, "*", source, "rm_source")
+			row++
+		}
+	} else {
+		// Add default mappings when no custom fields are provided
+		if params.Custodian != "" {
+			addClassifierRule(row, "*", params.Custodian, "rm_custodian")
+			row++
+		}
+
+		if params.Datasource != "" {
+			addClassifierRule(row, "*", params.Datasource, "rm_source")
+			row++
+		}
+	}
+
+	log.Debug().Msgf("configTableMaps: %+v", configs)
+
+	return []func(*adp.ConfigureDataSourceConfiguration){
 		adp.WithConfigureDataSourceNames(params.Datasource),
 		adp.WithConfigureDataSourceMetaDataMappingToConfigTables(configs),
 	}
-	return opts
 }
 
 func startDataSourceOptions(params DataIngestionParams) []func(*adp.StartDataSourceConfiguration) {
