@@ -34,15 +34,10 @@ USER: pyan:__casemanager__
 
 ### submitFileIngestionData
 ### POST http://localhost:8080/submitFileIngestionData?application=documentHold.demo00001&engine=singleMindServer.demo00001&dataSource=file_demo_01&dataSourceTemplate=_Disney_Template_v1&custodian=democust&filePath=E%3A%5CInstallation%5CDatasource%5CTest_Folder
-POST http://localhost:8080/submitFileIngestionData?application=documentHold.demo00001&engine=singleMindServer.demo00001&dataSource=file_demo_01&dataSourceTemplate=_Demo_File_v1&filePath=E%3A%5CInstallation%5CDatasource%5CTest_Folder
+POST http://localhost:8080/submitFileIngestionData?application=documentHold.demo00001&engine=singleMindServer.demo00001&dataSource=file_demo_01&dataSourceTemplate=_Demo_File_v1&filePath=E%3A%5CInstallation%5CDatasource%5CTest_Folder&custodian=cust02&source=src02&batch=bat02
 ADP: YWRwdXNlcjphZHB1czNy
 USER: pyan:__casemanager__
 content-type: application/json
-
-{
-    "rm_custodian": "demo_file_cust01",
-    "rm_source": "demo_file_source"
-}
 
 ### submitTagger
 POST http://localhost:8080/submitTagger?application=axcelerate.RH_ECA4_RH_Matter1&id=tagdemo1&globalSearch=all_plain_text_files&termTaxonomy=meta_bcc&typeTaxonomy=meta_cc

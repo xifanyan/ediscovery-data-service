@@ -77,34 +77,31 @@ func (h *Handler) SetupRouter(e *echo.Echo) {
 	e.POST("/addCustodian", h.addCustodian)
 }
 
+// in echo, Bind query parameters does not work for POST
 type DataIngestionParams struct {
-	Application  string
-	Engine       string
-	Datasource   string
-	Template     string
-	Custodian    string
-	Path         string
-	CustomFields map[string]string
+	Application string
+	Engine      string
+	Datasource  string
+	Template    string
+	Path        string
+	Source      string
+	Custodian   string
+	Batch       string
 }
 
 func newDataIngestionParams(c echo.Context) *DataIngestionParams {
-	params := DataIngestionParams{
-		Application:  c.QueryParam("application"),
-		Engine:       c.QueryParam("engine"),
-		Datasource:   c.QueryParam("dataSource"),
-		Template:     c.QueryParam("dataSourceTemplate"),
-		Custodian:    c.QueryParam("custodian"),
-		CustomFields: map[string]string{},
+	return &DataIngestionParams{
+		Application: c.QueryParam("application"),
+		Engine:      c.QueryParam("engine"),
+		Datasource:  c.QueryParam("dataSource"),
+		Template:    c.QueryParam("dataSourceTemplate"),
+		Source:      c.QueryParam("source"),
+		Custodian:   c.QueryParam("custodian"),
+		Batch:       c.QueryParam("batch"),
 	}
-
-	if err := c.Bind(&params.CustomFields); err != nil {
-		log.Warn().Err(err).Msg("Error binding custom fields")
-	}
-	return &params
 }
 
 func geFtpParams(c echo.Context) DataIngestionParams {
-
 	// remove leading slash
 	ftpPath := c.QueryParam("ftpPath")
 	if len(ftpPath) > 0 && ftpPath[0] == '/' {
@@ -112,18 +109,20 @@ func geFtpParams(c echo.Context) DataIngestionParams {
 	}
 	ftpPath = fmt.Sprintf("ftp://localhost/%s", ftpPath)
 
-	params := newDataIngestionParams(c)
+	var params = newDataIngestionParams(c)
 	params.Path = ftpPath
+
+	log.Debug().Msgf("params: %+v", params)
 
 	return *params
 }
 
 func geFileParams(c echo.Context) DataIngestionParams {
-
 	filePath := c.QueryParam("filePath")
 
-	params := newDataIngestionParams(c)
+	var params = newDataIngestionParams(c)
 	params.Path = filePath
+
 	log.Debug().Msgf("params: %+v", params)
 
 	return *params
@@ -293,49 +292,28 @@ func configDataSourceOptions(params DataIngestionParams) []func(*adp.ConfigureDa
 		)
 	}
 
-	row := 0
+	type customField struct {
+		name  string
+		value string
+	}
+	var customFields = []customField{}
 
 	// Handle custom fields if present
-	if len(params.CustomFields) > 0 {
-		// Check if rm_custodian exists in custom fields, if not use query param
-		custodian := params.CustomFields["rm_custodian"]
-		if custodian == "" && params.Custodian != "" {
-			custodian = params.Custodian
-		}
+	if len(params.Source) == 0 {
+		params.Source = params.Datasource
+	}
+	customFields = append(customFields, customField{name: "rm_source", value: params.Source})
 
-		// Check if rm_source exists in custom fields, if not use datasource from query param
-		source := params.CustomFields["rm_source"]
-		if source == "" && params.Datasource != "" {
-			source = params.Datasource
-		}
+	if len(params.Custodian) != 0 {
+		customFields = append(customFields, customField{name: "rm_custodian", value: params.Custodian})
+	}
 
-		// Add all custom fields
-		for field, value := range params.CustomFields {
-			addClassifierRule(row, "*", value, field)
-			row++
-		}
+	if len(params.Batch) != 0 {
+		customFields = append(customFields, customField{name: "rm_loadbatch", value: params.Batch})
+	}
 
-		// Add fallback mappings if they weren't in custom fields
-		if custodian != "" && params.CustomFields["rm_custodian"] == "" {
-			addClassifierRule(row, "*", custodian, "rm_custodian")
-			row++
-		}
-
-		if source != "" && params.CustomFields["rm_source"] == "" {
-			addClassifierRule(row, "*", source, "rm_source")
-			row++
-		}
-	} else {
-		// Add default mappings when no custom fields are provided
-		if params.Custodian != "" {
-			addClassifierRule(row, "*", params.Custodian, "rm_custodian")
-			row++
-		}
-
-		if params.Datasource != "" {
-			addClassifierRule(row, "*", params.Datasource, "rm_source")
-			row++
-		}
+	for i, field := range customFields {
+		addClassifierRule(i, "*", field.value, field.name)
 	}
 
 	log.Debug().Msgf("configTableMaps: %+v", configs)
@@ -355,9 +333,27 @@ func startDataSourceOptions(params DataIngestionParams) []func(*adp.StartDataSou
 }
 
 func (h *Handler) submitIngestionData(c echo.Context, params DataIngestionParams) error {
-	log.Debug().Msgf("params: %+v", params)
-
 	adpService := h.service.ResetADPServiceWithContextCredential(c)
+
+	dataSource := params.Datasource
+	if dataSource != "" && !strings.HasPrefix(dataSource, "dataSource.") {
+		dataSource = "dataSource." + dataSource
+	}
+
+	opts := []func(*adp.ListEntitiesConfiguration){
+		adp.WithListEntitiesID(dataSource),
+	}
+
+	dataSources, err := adpService.ListEntities(opts...)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to check datasource exists")
+		return h.handleADPError(c, err)
+	}
+
+	if len(dataSources) > 0 {
+		log.Error().Msgf("datasource %s already exist", dataSource)
+		return h.handleValidationError(c, fmt.Errorf("datasource %s already exist", dataSource))
+	}
 
 	createDataSourceOpts := createDataSourceOptions(params)
 	if err := adpService.CreateDataSource(createDataSourceOpts...); err != nil {
